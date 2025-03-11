@@ -89,26 +89,20 @@ We propose a context-aware search engine framework, **CART** (**C**ontext-**A**w
 
 (i) **Hybrid retrieval** using a **BM25 retrieval** model for fast, *lexical matching* and a **vector retrieva**l model for *semantic matching*. For short queries, BM25 often excels at precision for direct keyword matches, which is valuable for when users explicitly mentions certain brands or product attributes. Meanwhile, neural embeddings can capture synonyms, paraphrases and conceptual relations that lexical matching might miss (e.g., “headphones” and “earphones” might be close semantically).
 
-- **BM25 Retrieval.** Takes in a preprocessed query as input, and retrieves top $K_\text{BM25}$ documents based on **term frequency** (TF)**, inverse document frequency** (IDF) and **length normalisation**. TF adjusts the raw frequency of terms to avoid overemphasising those that appear very frequently, while IDF assesses the rarity or significance of a term within the entire corpus. The BM25 score is calculated by multiplying the TF and IDF values for each query term and then summing these scores across all terms.
+- **BM25 Retrieval.** Takes in a preprocessed query as input, and retrieves top $K_\text{BM25}$ documents based on **term frequency** (TF)**, inverse document frequency** (IDF) and **length normalisation**. TF adjusts the raw frequency of terms to avoid overemphasising those that appear very frequently, while IDF assesses the rarity or significance of a term within the entire corpus. The BM25 score is calculated by multiplying the TF and IDF values for each query term and then summing these scores across all terms.\
     
-    $'
-    \text{BM25}(d, q) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{\text{TF}(t, d) \cdot (k_1 + 1)}{\text{TF}(t, d) + k_1 \cdot \left(1 - b + b \cdot \frac{|d|}{\text{avgdl}}\right)}  
-    '$
+    $$\text{BM25}(d, q) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{\text{TF}(t, d) \cdot (k_1 + 1)}{\text{TF}(t, d) + k_1 \cdot \left(1 - b + b \cdot \frac{|d|}{\text{avgdl}}\right)}$$
     
     For example, for the expanded query “headphones gaming Sony,” the initial BM25 candidate product list may look like: `[{id: 1, title: "Sony Gaming Headphones...", bm25_score: 12.3}, ...]`.
     
-- **Vector Retrieval.** Retrieves top  $K_\text{VR}$ documents based on semantic alignment scoring (via cosine similarity) between a **unified query vector** $\mathbf{u}$ (preprocessed query embedding + user context vector) and each **product document embedding  $\mathbf{d}_D$**:
+- **Vector Retrieval.** Retrieves top  $K_\text{VR}$ documents based on semantic alignment scoring (via cosine similarity) between a **unified query vector** $\mathbf{u}$ (preprocessed query embedding + user context vector) and each **product document embedding  $\mathbf{d}_D$**:\
     
-    $$
-    \text{Sim}(D, q_{\text{exp}}) = \cos(\mathbf{u}, \mathbf{d}_D) = \frac{\mathbf{u} \cdot \mathbf{d}_D}{\|\mathbf{u}\| \cdot \|\mathbf{d}_D\|}
-    $$
+    $$\text{Sim}(D, q_{\text{exp}}) = \cos(\mathbf{u}, \mathbf{d}_D) = \frac{\mathbf{u} \cdot \mathbf{d}_D}{\|\mathbf{u}\| \cdot \|\mathbf{d}_D\|}$$
     
 
-The candidate sets from both retrievals are merged by either a **rank fusion** (e.g., reciprocal rank fusion) or a **score fusion** technique (e.g., a weighted sum of BM25 scores and vector similarity). Since BM25 and vector similarity scores may exist on different scales, they will be normalised (**min-max normalisation** or **Z-score) standardisation** before merging.
+The candidate sets from both retrievals are merged by either a **rank fusion** (e.g., reciprocal rank fusion) or a **score fusion** technique (e.g., a weighted sum of BM25 scores and vector similarity). Since BM25 and vector similarity scores may exist on different scales, they will be normalised (**min-max normalisation** or **Z-score) standardisation** before merging.\
 
-$$
-\text{FinalScore}(D) = \beta \cdot \text{BM25}(D) + (1-\beta) \cdot \text{Sim}(D, q_{\text{exp}})
-$$
+$$\text{FinalScore}(D) = \beta \cdot \text{BM25}(D) + (1-\beta) \cdot \text{Sim}(D, q_{\text{exp}})$$
 
 where β can be fine-tuned to balance lexical vs. semantic emphasis.
 
