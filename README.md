@@ -91,9 +91,9 @@ We propose a context-aware search engine framework, **CART** (**C**ontext-**A**w
 
 - **BM25 Retrieval.** Takes in a preprocessed query as input, and retrieves top $K_\text{BM25}$ documents based on **term frequency** (TF)**, inverse document frequency** (IDF) and **length normalisation**. TF adjusts the raw frequency of terms to avoid overemphasising those that appear very frequently, while IDF assesses the rarity or significance of a term within the entire corpus. The BM25 score is calculated by multiplying the TF and IDF values for each query term and then summing these scores across all terms.
     
-    $$
+    $'
     \text{BM25}(d, q) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{\text{TF}(t, d) \cdot (k_1 + 1)}{\text{TF}(t, d) + k_1 \cdot \left(1 - b + b \cdot \frac{|d|}{\text{avgdl}}\right)}  
-    $$
+    '$
     
     For example, for the expanded query “headphones gaming Sony,” the initial BM25 candidate product list may look like: `[{id: 1, title: "Sony Gaming Headphones...", bm25_score: 12.3}, ...]`.
     
