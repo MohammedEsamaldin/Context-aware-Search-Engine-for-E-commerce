@@ -1,6 +1,6 @@
 # Context-aware-Search-Engine-for-E-commerce
-Search engine for e-commerce product search that better captures user intent.
 
+Search engine for e-commerce product search that better captures user intent.
 
 ### 1. Literature Review
 
@@ -87,18 +87,13 @@ We propose a context-aware search engine framework, **CART** (**C**ontext-**A**w
 
 **2.3.1. Retrieval Models**. The system employs a two-stage pipeline:
 
-(i) **Hybrid retrieval** using a **BM25 retrieval** model for fast, *lexical matching* and a **vector retrieva**l model for *semantic matching*. For short queries, BM25 often excels at precision for direct keyword matches, which is valuable for when users explicitly mentions certain brands or product attributes. Meanwhile, neural embeddings can capture synonyms, paraphrases and conceptual relations that lexical matching might miss (e.g., “headphones” and “earphones” might be close semantically).
+(i) **Hybrid retrieval** using a **BM25 retrieval** model for fast, _lexical matching_ and a **vector retrieva**l model for _semantic matching_. For short queries, BM25 often excels at precision for direct keyword matches, which is valuable for when users explicitly mentions certain brands or product attributes. Meanwhile, neural embeddings can capture synonyms, paraphrases and conceptual relations that lexical matching might miss (e.g., “headphones” and “earphones” might be close semantically).
 
 - **BM25 Retrieval.** Takes in a preprocessed query as input, and retrieves top $K_\text{BM25}$ documents based on **term frequency** (TF)**, inverse document frequency** (IDF) and **length normalisation**. TF adjusts the raw frequency of terms to avoid overemphasising those that appear very frequently, while IDF assesses the rarity or significance of a term within the entire corpus. The BM25 score is calculated by multiplying the TF and IDF values for each query term and then summing these scores across all terms.\
-    
-    $$\text{BM25}(d, q) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{\text{TF}(t, d) \cdot (k_1 + 1)}{\text{TF}(t, d) + k_1 \cdot \left(1 - b + b \cdot \frac{|d|}{\text{avgdl}}\right)}$$
-    
-    For example, for the expanded query “headphones gaming Sony,” the initial BM25 candidate product list may look like: `[{id: 1, title: "Sony Gaming Headphones...", bm25_score: 12.3}, ...]`.
-    
-- **Vector Retrieval.** Retrieves top  $K_\text{VR}$ documents based on semantic alignment scoring (via cosine similarity) between a **unified query vector** $\mathbf{u}$ (preprocessed query embedding + user context vector) and each **product document embedding  $\mathbf{d}_D$**:\
-    
-    $$\text{Sim}(D, q_{\text{exp}}) = \cos(\mathbf{u}, \mathbf{d}_D) = \frac{\mathbf{u} \cdot \mathbf{d}_D}{\|\mathbf{u}\| \cdot \|\mathbf{d}_D\|}$$
-    
+  $$\text{BM25}(d, q) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{\text{TF}(t, d) \cdot (k_1 + 1)}{\text{TF}(t, d) + k_1 \cdot \left(1 - b + b \cdot \frac{|d|}{\text{avgdl}}\right)}$$
+  For example, for the expanded query “headphones gaming Sony,” the initial BM25 candidate product list may look like: `[{id: 1, title: "Sony Gaming Headphones...", bm25_score: 12.3}, ...]`.
+- **Vector Retrieval.** Retrieves top $K_\text{VR}$ documents based on semantic alignment scoring (via cosine similarity) between a **unified query vector** $\mathbf{u}$ (preprocessed query embedding + user context vector) and each **product document embedding $\mathbf{d}_D$**:\
+  $$\text{Sim}(D, q_{\text{exp}}) = \cos(\mathbf{u}, \mathbf{d}_D) = \frac{\mathbf{u} \cdot \mathbf{d}_D}{\|\mathbf{u}\| \cdot \|\mathbf{d}_D\|}$$
 
 The candidate sets from both retrievals are merged by either a **rank fusion** (e.g., reciprocal rank fusion) or a **score fusion** technique (e.g., a weighted sum of BM25 scores and vector similarity). Since BM25 and vector similarity scores may exist on different scales, they will be normalised (**min-max normalisation** or **Z-score) standardisation** before merging.\
 
@@ -108,9 +103,9 @@ where β can be fine-tuned to balance lexical vs. semantic emphasis.
 
 (ii) **Transformer re-ranker** for producing a estimating the final relevance of each candidate to the user’s query and context. We first prepare the input:
 
-- **Refined Query Text**: Tokenise the expanded query using a pre-trained tokeniser (e.g.  "headphones" → Expanded to "gaming headphones Sony").
+- **Refined Query Text**: Tokenise the expanded query using a pre-trained tokeniser (e.g. "headphones" → Expanded to "gaming headphones Sony").
 - **Unified Contextual Embedding**: Using the fused vector (e.g., $\bold{u}=\text{QueryEmbedding("gaming headphones Sony")}+\text{ContextVector("gaming":0.8, "Sony":0.6)}$). To ensure both embeddings occupy the same vector space, we use a project layer (e.g., linear transformation) their spaces. L2-normalisation is also applied to ensure that the context vector does not dominate our query embedding.
-- **Candidate Documents**: Tokenise document titles/descriptions from the merged BM25 (e.g. “Sony  WH-1000XM5”) + Vector Retrieval candidate list (e.g., "Bose QC45").
+- **Candidate Documents**: Tokenise document titles/descriptions from the merged BM25 (e.g. “Sony WH-1000XM5”) + Vector Retrieval candidate list (e.g., "Bose QC45").
 
 We use a cross-encoder Transformer (e.g., BERT) fine-tuned for ranking. For each candidate item $d$, we get $\text{score}(q,d)$ from the cross-encoder, which will be then be re-sorted to obtain the final top K products ranking.
 
@@ -120,30 +115,21 @@ We use a cross-encoder Transformer (e.g., BERT) fine-tuned for ranking. For each
 
 (ii). **Dynamic context modelling**. Comprises of two models: a session graph and a user profile
 
-- **Session Graph**. ****Inspired by Zuo et al. (2023), the session graph is used to model short-term intent transitions by tracking intra-session behaviour. We further use this to infer long-term preferences for the User Profile model.
-    
-    Let $G_u​=(V_u​,E_u​)$  represent the session graph for user $u$, where $V_u=\{v_1,v_2,...\}$ are the nodes (queries or products) and $E_u=\{e_{ij}\}$ are the edges (transitions between nodes). Edge weights $w_{ij}$ reflect both frequency and recency of transitions, represented by the equation:
-    
-    $$
-    w_{ij} = \frac{\text{count}(i \to j)}{\sum_{k} \text{count}(i \to k)}  
-    $$
-    
-    where $\text{count}(i \to k)$ represents the number of times the user transitions from $i$, and the denominator normalises weights to sum to 1 for all edges leaving $i.$ For example, if a user transitions $\text{"laptop"}\to\text{"mouse"}$ 5 times and $\text{"laptop"}\to\text{"keyboard"}$ 3 times, then $w_{\text{laptop}\to\text{mouse}} = \frac{5}{8}$ and $w_{\text{laptop}\to\text{keyboard}} = \frac{3}{8}$.
-    
-    **Recency Adjustment**. To prioritise recent interactions, we apply weights decay exponentially over time:
-    
-    $$
-    w_{ij}^{\text{recency}} = w_{ij} \cdot e^{-\lambda \Delta t}
-    $$
-    
-    where $\Delta t$ is the time since last transition $i\to j$ and $\lambda$ controls decay rate.
-    
+- **Session Graph**. \*\*\*\*Inspired by Zuo et al. (2023), the session graph is used to model short-term intent transitions by tracking intra-session behaviour. We further use this to infer long-term preferences for the User Profile model.
+  Let $G_u​=(V_u​,E_u​)$ represent the session graph for user $u$, where $V_u=\{v_1,v_2,...\}$ are the nodes (queries or products) and $E_u=\{e_{ij}\}$ are the edges (transitions between nodes). Edge weights $w_{ij}$ reflect both frequency and recency of transitions, represented by the equation:
+  $$
+  w_{ij} = \frac{\text{count}(i \to j)}{\sum_{k} \text{count}(i \to k)}  
+  $$
+  where $\text{count}(i \to k)$ represents the number of times the user transitions from $i$, and the denominator normalises weights to sum to 1 for all edges leaving $i.$ For example, if a user transitions $\text{"laptop"}\to\text{"mouse"}$ 5 times and $\text{"laptop"}\to\text{"keyboard"}$ 3 times, then $w_{\text{laptop}\to\text{mouse}} = \frac{5}{8}$ and $w_{\text{laptop}\to\text{keyboard}} = \frac{3}{8}$.
+  **Recency Adjustment**. To prioritise recent interactions, we apply weights decay exponentially over time:
+  $$
+  w_{ij}^{\text{recency}} = w_{ij} \cdot e^{-\lambda \Delta t}
+  $$
+  where $\Delta t$ is the time since last transition $i\to j$ and $\lambda$ controls decay rate.
 - **User Profile**. Persistent user interests across sessions are captured by aggregating term weights using exponential time decay to downweigh older interactions. For example, for a term $t$ (e.g. “gaming”), its long-term preference weight $w_t$ is calculated as:
-    
-    $$
-    w_t = \sum_{s \in \mathcal{S}_u} \mathbb{I}(t \in s) \cdot e^{-\lambda \Delta t_s},  
-    $$
-    
+  $$
+  w_t = \sum_{s \in \mathcal{S}_u} \mathbb{I}(t \in s) \cdot e^{-\lambda \Delta t_s},
+  $$
 
 (iii). **Unified context vectorisation**. To retrieve a unified embedding $\mathbf{u}$, we combine the refined query text $q_{exp}$ with the context vector $\mathbf{c}_u$ (derived from the session graph and user profile). $\mathbf{c}_u$ is generated via term-weighted averaging (Melucci et al., 2005) and then combined with the query embedding via the sum rule (Tourani et al., 2023). To ensure $\mathbf{q}_{\text{exp}}$ and $\mathbf{c}_u$ occupy the same vector space, we also apply a linear transformation function to align their spaces.
 
@@ -174,53 +160,53 @@ where $\mathbf{W}$ is a learnable weight matrix.
 
 **3.1. Teamwork (Responsibilities)**.
 
-| Scope  | Deliverable  | Assigned  | Details  |
-| --- | --- | --- | --- |
-| A1, A2  | Project Management  | Viriya, Mohammed  | **Viriya**: Scrum Board, Report Coordinator. 
-**Mohammed**: Meeting Notes, GitHub Maintenance.  |
-| A1  | Literature Review  | Everyone  | At least 5 papers each for brainstorming; 2 papers each for final written review.  |
-| A1  | Aim, Task, Dataset  | Mohammed, Seyedeh  | **Mohammed**: Dataset, Evaluation Plan. 
-**Seyedeh**: Problem Setup/Search Task.  |
-| A1  | General Architecture of Search Engine  | Dania, Viriya  | -  |
-| A1  | Description of Retrieval Model(s)  | Seyedeh  | -  |
-| A1  | Development Tool(s)  | Mohammed  | -  |
-| A1  | Teamwork & Time Plan  | Dania, Viriya  | **Viriya**: Teamwork
-**Dania**: Time plan for search engine development.  |
-| A2  | Source Code  | Everyone  | Classical IR model for benchmark (e.g. TF-IDF); Our proposed model  |
-| A2  | Presentation Slides & Videos  | Everyone  | -  |
+| Scope                                                | Deliverable                            | Assigned           | Details                                                                            |
+| ---------------------------------------------------- | -------------------------------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| A1, A2                                               | Project Management                     | Viriya, Mohammed   | **Viriya**: Scrum Board, Report Coordinator.                                       |
+| **Mohammed**: Meeting Notes, GitHub Maintenance.     |
+| A1                                                   | Literature Review                      | Everyone           | At least 5 papers each for brainstorming; 2 papers each for final written review.  |
+| A1                                                   | Aim, Task, Dataset                     | Mohammed, Seyedeh  | **Mohammed**: Dataset, Evaluation Plan.                                            |
+| **Seyedeh**: Problem Setup/Search Task.              |
+| A1                                                   | General Architecture of Search Engine  | Dania, Viriya      | -                                                                                  |
+| A1                                                   | Description of Retrieval Model(s)      | Seyedeh            | -                                                                                  |
+| A1                                                   | Development Tool(s)                    | Mohammed           | -                                                                                  |
+| A1                                                   | Teamwork & Time Plan                   | Dania, Viriya      | **Viriya**: Teamwork                                                               |
+| **Dania**: Time plan for search engine development.  |
+| A2                                                   | Source Code                            | Everyone           | Classical IR model for benchmark (e.g. TF-IDF); Our proposed model                 |
+| A2                                                   | Presentation Slides & Videos           | Everyone           | -                                                                                  |
 
 **3.2. Development Timeline**.
 
-| Week  | Title  | Description  |
-| --- | --- | --- |
-| Week 1 (Mar 4 – Mar 10)  | Planning & Setup  | - **Finalise Requirements & Architecture**: Confirm features and design for the LLM-based Query Preprocessor. 
-- **Environment Setup**: Configure development environments and prepare benchmark datasets.  |
-| Week 2 (Mar 11 – Mar 17)  | Core Development Phase I  | - **LLM-Based Query Preprocessor**: Implement query rewriting with context injection. 
-- **BM25 Retrieval Module**: Develop the lexical matching component.  |
-| Week 3 (Mar 18 – Mar 24)  | Core Development Phase II   | - **Vector Retrieval Module**: Develop the semantic search component. 
-- **Integration**: integrate BM25 and vector retrieval.  |
-| Week 4 (Mar 25 – Mar 31)  | Integration & Tuning Phase I   | - **Score Fusion**: fuse outputs of BM25 and vector. 
-- **Transformer Re-Ranker**:  integrate the re-ranker for fine-tuning the Top k results.  |
-| Week 5 (Apr 1 – Apr 7)  | Optimisation & Finalisation | - **Optimisation**: Fine-tune score fusion and re-ranking strategies for optimal performance. 
-- **End-to-End Testing**: Validate the full pipeline with real-world data and finalize documentation.  |
-| Week 6 (Apr 8 – Apr 14)  | Wrap-Up & Review   | Same as Week 5 |
+| Week                                                                                                   | Title                          | Description                                                                                                    |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Week 1 (Mar 4 – Mar 10)                                                                                | Planning & Setup               | - **Finalise Requirements & Architecture**: Confirm features and design for the LLM-based Query Preprocessor.  |
+| - **Environment Setup**: Configure development environments and prepare benchmark datasets.            |
+| Week 2 (Mar 11 – Mar 17)                                                                               | Core Development Phase I       | - **LLM-Based Query Preprocessor**: Implement query rewriting with context injection.                          |
+| - **BM25 Retrieval Module**: Develop the lexical matching component.                                   |
+| Week 3 (Mar 18 – Mar 24)                                                                               | Core Development Phase II      | - **Vector Retrieval Module**: Develop the semantic search component.                                          |
+| - **Integration**: integrate BM25 and vector retrieval.                                                |
+| Week 4 (Mar 25 – Mar 31)                                                                               | Integration & Tuning Phase I   | - **Score Fusion**: fuse outputs of BM25 and vector.                                                           |
+| - **Transformer Re-Ranker**: integrate the re-ranker for fine-tuning the Top k results.                |
+| Week 5 (Apr 1 – Apr 7)                                                                                 | Optimisation & Finalisation    | - **Optimisation**: Fine-tune score fusion and re-ranking strategies for optimal performance.                  |
+| - **End-to-End Testing**: Validate the full pipeline with real-world data and finalize documentation.  |
+| Week 6 (Apr 8 – Apr 14)                                                                                | Wrap-Up & Review               | Same as Week 5                                                                                                 |
 
 ---
 
 ### 4. Reference
 
-Melucci, M. (2005) ‘Context modeling and discovery using vector space bases’, *Proceedings of the 14th ACM international conference on Information and knowledge management*, pp. 808–815. doi:10.1145/1099554.1099745.
+Melucci, M. (2005) ‘Context modeling and discovery using vector space bases’, _Proceedings of the 14th ACM international conference on Information and knowledge management_, pp. 808–815. doi:10.1145/1099554.1099745.
 
-Merrouni, Z.A., Frikh, B. and Ouhbi, B. (2019) ‘Toward contextual information retrieval: A review and trends’, *Procedia Computer Science*, 148, pp. 191–200. doi:10.1016/j.procs.2019.01.036.
+Merrouni, Z.A., Frikh, B. and Ouhbi, B. (2019) ‘Toward contextual information retrieval: A review and trends’, _Procedia Computer Science_, 148, pp. 191–200. doi:10.1016/j.procs.2019.01.036.
 
-Singh, J.K. and Boursier, P.F. (2024) ‘Adaptive context-aware personalized information retrieval: Enhancing precision with evolutionary machine learning’, *International Journal of Computer Applications*, 186(57), pp. 1–6. doi:10.5120/ijca2024924297.
+Singh, J.K. and Boursier, P.F. (2024) ‘Adaptive context-aware personalized information retrieval: Enhancing precision with evolutionary machine learning’, _International Journal of Computer Applications_, 186(57), pp. 1–6. doi:10.5120/ijca2024924297.
 
-Tamine, L. and Daoud, M. (2018) ‘Evaluation in contextual information retrieval’, *ACM Computing Surveys*, 51(4), pp. 1–36. doi:10.1145/3204940.
+Tamine, L. and Daoud, M. (2018) ‘Evaluation in contextual information retrieval’, _ACM Computing Surveys_, 51(4), pp. 1–36. doi:10.1145/3204940.
 
-Tourani, A. *et al.* (2024) ‘Capri: Context-aware point-of-interest recommendation framework’, *Software Impacts*, 19, p. 100606. doi:10.1016/j.simpa.2023.100606.
+Tourani, A. _et al._ (2024) ‘Capri: Context-aware point-of-interest recommendation framework’, _Software Impacts_, 19, p. 100606. doi:10.1016/j.simpa.2023.100606.
 
-Wan, H. *et al.* (2024) ‘How can personalized context help? exploring joint retrieval of passage and personalized context’, *ICASSP 2024 - 2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)*, pp. 9991–9995. doi:10.1109/icassp48485.2024.10447921.
+Wan, H. _et al._ (2024) ‘How can personalized context help? exploring joint retrieval of passage and personalized context’, _ICASSP 2024 - 2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)_, pp. 9991–9995. doi:10.1109/icassp48485.2024.10447921.
 
-Zuo, S. *et al.* (2023a) ‘Context-aware query rewriting for improving users’ search experience on e-commerce websites’, *Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track)*, pp. 616–628. doi:10.18653/v1/2023.acl-industry.59.
+Zuo, S. _et al._ (2023a) ‘Context-aware query rewriting for improving users’ search experience on e-commerce websites’, _Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track)_, pp. 616–628. doi:10.18653/v1/2023.acl-industry.59.
 
-Zuo, S. *et al.* (2023b) ‘Context-aware query rewriting for improving users’ search experience on e-commerce websites’, *Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track)*, pp. 616–628. doi:10.18653/v1/2023.acl-industry.59.
+Zuo, S. _et al._ (2023b) ‘Context-aware query rewriting for improving users’ search experience on e-commerce websites’, _Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track)_, pp. 616–628. doi:10.18653/v1/2023.acl-industry.59.
