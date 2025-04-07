@@ -1,12 +1,11 @@
-# Byte-compiled files and caches
 __pycache__/
 *.py[cod]
 
-# Virtual environment folder
 env/
-
-# Local environment files
 *.env
 
-# Ignore JSON files in config folder (e.g., service account keys)
 config/*.json
+
+*.pyc
+*.iml
+*.xml

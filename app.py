@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 from fastapi import FastAPI, HTTPException
 import firebase_admin
@@ -128,3 +129,6 @@ def delete_unified_embedding(embedding_id: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+=======
+# Main entry point (Flask/FastAPI server)
+>>>>>>> af44f7ea1442677acd1237d0e2b825316398b7a5
