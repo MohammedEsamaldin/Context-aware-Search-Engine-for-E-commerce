@@ -1,20 +1,79 @@
-import os
-from fastapi import FastAPI, HTTPException
-import firebase_admin
-from firebase_admin import credentials, firestore
+# import os
+# from fastapi import FastAPI, HTTPException
+# import firebase_admin
+# from firebase_admin import credentials, firestore
 
-# Import your models from src/models using absolute imports.
+# # Import your models from src/models using absolute imports.
+# from src.models import UserProfile, Preferences, Product, QueryLog, RetrievalResults, Session, QueryNode, Transition, UnifiedEmbedding
+
+# # Initialize Firebase Admin using your service account file.
+# # Replace "path/to/serviceAccountKey.json" with the actual path.
+# cred_path = "config/firebase_cart_admin.json"
+# if not firebase_admin._apps:
+#     cred = credentials.Certificate(cred_path)
+#     firebase_admin.initialize_app(cred)
+# db = firestore.client()
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+from fastapi import FastAPI, HTTPException
+from datetime import datetime, timezone
+from src.db.firebase_client import db
+from src.modules.session.session_manager import SessionManager
 from src.models import UserProfile, Preferences, Product, QueryLog, RetrievalResults, Session, QueryNode, Transition, UnifiedEmbedding
 
-# Initialize Firebase Admin using your service account file.
-# Replace "path/to/serviceAccountKey.json" with the actual path.
-cred_path = "config/firebase_cart_admin.json"
-if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
-db = firestore.client()
-
 app = FastAPI(title="Context-Aware Search Engine Backend")
+
+# Instantiate the session manager with the Firestore client
+session_manager = SessionManager(db)
+
+# --- Session Endpoints ---
+@app.post("/sessions", response_model=Session)
+def create_session(user_id: str):
+    """
+    Create a new session for the specified user.
+    """
+    try:
+        new_session = session_manager.create_session(user_id, datetime.now(timezone.utc))
+        return new_session
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/sessions/{session_id}/query", response_model=Session)
+def add_query_to_session(session_id: str, query_text: str):
+    """
+    Add a query to the session and update transitions.
+    """
+    try:
+        updated_session = session_manager.add_query_to_session(session_id, query_text)
+        return updated_session
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/sessions/{session_id}/terminate", response_model=Session)
+def terminate_session(session_id: str):
+    """
+    Terminate a session.
+    """
+    try:
+        terminated_session = session_manager.terminate_session(session_id)
+        return terminated_session
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/sessions/active/{user_id}", response_model=Session)
+def get_active_session(user_id: str):
+    """
+    Retrieve the current active session for a given user.
+    """
+    try:
+        active_session = session_manager.get_active_session(user_id)
+        if active_session is None:
+            raise HTTPException(status_code=404, detail="Active session not found")
+        return active_session
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- User Profile Endpoints ---
 @app.post("/users", response_model=UserProfile)
