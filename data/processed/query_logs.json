@@ -1,0 +1,179 @@
+[
+  {
+    "logId": "log_20250407_user001_q1",
+    "userId": "user001",
+    "sessionId": "session_20250407_user001_1",
+    "rawQuery": "organic baby clothes",
+    "refinedQuery": "organic baby clothes baby swaddles nursery decor",
+    "timestamp": "2025-04-07T09:30:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B0883DXZYV",
+        "B082KL8GP1"
+      ],
+      "Vector": [
+        "B0883DXZYV",
+        "B098SF7Y8K"
+      ]
+    },
+    "finalResults": [
+      "B0883DXZYV",
+      "B098SF7Y8K",
+      "B082KL8GP1"
+    ]
+  },
+  {
+    "logId": "log_20250407_user001_q2",
+    "userId": "user001",
+    "sessionId": "session_20250407_user001_1",
+    "rawQuery": "aden + anais swaddles",
+    "refinedQuery": "aden + anais swaddles",
+    "timestamp": "2025-04-07T09:42:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B0883DXZYV"
+      ],
+      "Vector": [
+        "B0883DXZYV"
+      ]
+    },
+    "finalResults": [
+      "B0883DXZYV"
+    ]
+  },
+  {
+    "logId": "log_20250407_user001_q3",
+    "userId": "user001",
+    "sessionId": "session_20250407_user001_1",
+    "rawQuery": "handmade nursery decor",
+    "refinedQuery": "handmade nursery decor elegant home decor",
+    "timestamp": "2025-04-07T10:05:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B098SF7Y8K",
+        "B082KL8GP1"
+      ],
+      "Vector": [
+        "B098SF7Y8K"
+      ]
+    },
+    "finalResults": [
+      "B098SF7Y8K",
+      "B082KL8GP1"
+    ]
+  },
+  {
+    "logId": "log_20250407_user002_q1",
+    "userId": "user002",
+    "sessionId": "session_20250407_user002_1",
+    "rawQuery": "rv furniture covers",
+    "refinedQuery": "rv furniture covers durable upholstery covers",
+    "timestamp": "2025-04-07T14:00:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B08RN1NGHQ"
+      ],
+      "Vector": [
+        "B08RN1NGHQ"
+      ]
+    },
+    "finalResults": [
+      "B08RN1NGHQ"
+    ]
+  },
+  {
+    "logId": "log_20250407_user002_q2",
+    "userId": "user002",
+    "sessionId": "session_20250407_user002_1",
+    "rawQuery": "kastking fishing reels",
+    "refinedQuery": "kastking fishing reels high performance",
+    "timestamp": "2025-04-07T14:15:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B07VWHDJ3T"
+      ],
+      "Vector": [
+        "B07VWHDJ3T"
+      ]
+    },
+    "finalResults": [
+      "B07VWHDJ3T"
+    ]
+  },
+  {
+    "logId": "log_20250407_user002_q3",
+    "userId": "user002",
+    "sessionId": "session_20250407_user002_1",
+    "rawQuery": "waterproof couch protectors",
+    "refinedQuery": "waterproof couch protectors for rv",
+    "timestamp": "2025-04-07T14:35:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B08RN1NGHQ"
+      ],
+      "Vector": [
+        "B08RN1NGHQ"
+      ]
+    },
+    "finalResults": [
+      "B08RN1NGHQ"
+    ]
+  },
+  {
+    "logId": "log_20250407_user003_q1",
+    "userId": "user003",
+    "sessionId": "session_20250407_user003_1",
+    "rawQuery": "phone wood cases",
+    "refinedQuery": "wooden phone cases custom",
+    "timestamp": "2025-04-07T16:20:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B07RD414P4"
+      ],
+      "Vector": [
+        "B07RD414P4"
+      ]
+    },
+    "finalResults": [
+      "B07RD414P4"
+    ]
+  },
+  {
+    "logId": "log_20250407_user003_q2",
+    "userId": "user003",
+    "sessionId": "session_20250407_user003_1",
+    "rawQuery": "polar seltzer cooler",
+    "refinedQuery": "polar seltzer cooler insulated",
+    "timestamp": "2025-04-07T16:35:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B07CZK59W2"
+      ],
+      "Vector": [
+        "B07CZK59W2"
+      ]
+    },
+    "finalResults": [
+      "B07CZK59W2"
+    ]
+  },
+  {
+    "logId": "log_20250407_user003_q3",
+    "userId": "user003",
+    "sessionId": "session_20250407_user003_1",
+    "rawQuery": "diy wood desk plans",
+    "refinedQuery": "diy wood desk plans woodworking",
+    "timestamp": "2025-04-07T16:50:00Z",
+    "retrievalResults": {
+      "BM25": [
+        "B07DNKG8NR"
+      ],
+      "Vector": [
+        "B07DNKG8NR"
+      ]
+    },
+    "finalResults": [
+      "B07DNKG8NR"
+    ]
+  }
+]
