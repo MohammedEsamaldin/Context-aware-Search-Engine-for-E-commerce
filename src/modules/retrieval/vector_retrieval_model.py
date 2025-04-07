@@ -20,7 +20,7 @@ class ProductSearchEngine:
             results.append({
                 "Product ID": self.product_df['product_id'][idx],
                 "Product Title": self.product_df['product_title'][idx],
-                "Distance": round(dist, 4)
+                "Distance": round(dist, 3)
             })
         return pd.DataFrame(results)
 
