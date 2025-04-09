@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # import os
 # from fastapi import FastAPI, HTTPException
 # import firebase_admin
@@ -81,109 +82,84 @@ def create_user(user: UserProfile):
     doc_ref = db.collection("users").document(user.id)
     doc_ref.set(user.dict(by_alias=True))
     return user
+=======
+"""
+Main pipeline for the IR system.
 
-@app.get("/users/{user_id}", response_model=UserProfile)
-def get_user(user_id: str):
-    doc_ref = db.collection("users").document(user_id)
-    doc = doc_ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="User not found")
-    return UserProfile(**doc.to_dict())
+Each step is marked by its number and includes:
+- Input types
+- Output types
+- TODO placeholder for implementation
 
-@app.put("/users/{user_id}", response_model=UserProfile)
-def update_user(user_id: str, user: UserProfile):
-    doc_ref = db.collection("users").document(user_id)
-    doc_ref.update(user.dict(by_alias=True))
-    updated_doc = doc_ref.get()
-    return UserProfile(**updated_doc.to_dict())
+# NOTE for @riya:
+# Please make sure to add the `embedding` attribute to the relevant QueryLog class so it can store the vector here.
 
-@app.delete("/users/{user_id}")
-def delete_user(user_id: str):
-    db.collection("users").document(user_id).delete()
-    return {"detail": "User deleted"}
+Team members: Please stick to the input/output contracts and update your section.
+"""
 
-# --- Product Endpoints ---
-@app.post("/products", response_model=Product)
-def create_product(product: Product):
-    doc_ref = db.collection("products").document(product.id)
-    doc_ref.set(product.dict(by_alias=True))
-    return product
+# 1. Create session
+# Input: None
+# Output: session (Session object)
+session = None  # TODO: Implement session creation
+>>>>>>> Stashed changes
 
-@app.get("/products/{product_id}", response_model=Product)
-def get_product(product_id: str):
-    doc_ref = db.collection("products").document(product_id)
-    doc = doc_ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return Product(**doc.to_dict())
+# 2. Get user info from DB
+# Input: session.user_id
+# Output: user (User object)
+user = None  # TODO: Fetch user info from DB
 
-@app.put("/products/{product_id}", response_model=Product)
-def update_product(product_id: str, product: Product):
-    doc_ref = db.collection("products").document(product_id)
-    doc_ref.update(product.dict(by_alias=True))
-    updated_doc = doc_ref.get()
-    return Product(**updated_doc.to_dict())
+# 3. Get product data from DB
+# Input: None
+# Output: products (list of Product objects)
+products = []  # TODO: Load products from DB
 
-@app.delete("/products/{product_id}")
-def delete_product(product_id: str):
-    db.collection("products").document(product_id).delete()
-    return {"detail": "Product deleted"}
+# 4. Fill query inside session
+# Input: raw_query (str)
+# Output: updated session (Session object)
+raw_query = "example query"
+# TODO: Add query to session
 
-# --- QueryLog Endpoints ---
-@app.post("/query_logs", response_model=QueryLog)
-def create_query_log(query_log: QueryLog):
-    doc_ref = db.collection("query_logs").document(query_log.id)
-    doc_ref.set(query_log.dict(by_alias=True))
-    return query_log
+# 5. Create query log (fill raw + refined query)
+# Input: raw_query (str)
+# Output: query_log (QueryLog object)
+query_log = None  # TODO: Create and store query log
 
-@app.get("/query_logs/{log_id}", response_model=QueryLog)
-def get_query_log(log_id: str):
-    doc_ref = db.collection("query_logs").document(log_id)
-    doc = doc_ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="QueryLog not found")
-    return QueryLog(**doc.to_dict())
+# 6. Update session graph
+# Input: query_log (QueryLog), session (Session object)
+# Output: session_graph (SessionGraph object)
+session_graph = None  # TODO: Update session graph structure
 
-@app.put("/query_logs/{log_id}", response_model=QueryLog)
-def update_query_log(log_id: str, query_log: QueryLog):
-    doc_ref = db.collection("query_logs").document(log_id)
-    doc_ref.update(query_log.dict(by_alias=True))
-    updated_doc = doc_ref.get()
-    return QueryLog(**updated_doc.to_dict())
+# 7. Preprocess query
+# Input: query_log.raw_query (str)
+# Output: query_log.refined_query (str)
+# TODO: Clean and refine query, update QueryLog
 
-@app.delete("/query_logs/{log_id}")
-def delete_query_log(log_id: str):
-    db.collection("query_logs").document(log_id).delete()
-    return {"detail": "QueryLog deleted"}
+# 8. Embed refined query
+# Input: query_log.refined_query (str)
+# Output: query_log.embedding (list of floats)
+# TODO: Generate embeddings and update QueryLog
 
-# --- UnifiedEmbedding Endpoints ---
-@app.post("/unified_embeddings", response_model=UnifiedEmbedding)
-def create_unified_embedding(embedding: UnifiedEmbedding):
-    doc_ref = db.collection("unified_embeddings").document(embedding.id)
-    doc_ref.set(embedding.dict(by_alias=True))
-    return embedding
+# 9. BM25 retrieval
+# Input: query_log.refined_query (str), products (list of Product)
+# Output: bm25_results (list[dict{'product': Product, 'score': float}])
+bm25_results = []  # TODO: Apply BM25 ranking
 
-@app.get("/unified_embeddings/{embedding_id}", response_model=UnifiedEmbedding)
-def get_unified_embedding(embedding_id: str):
-    doc_ref = db.collection("unified_embeddings").document(embedding_id)
-    doc = doc_ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="UnifiedEmbedding not found")
-    return UnifiedEmbedding(**doc.to_dict())
+# 10. Vector search
+# Input: query_log.embedding (list of floats), products (list of Product)
+# Output: vector_results (list[dict{'product': Product, 'score': float}])
+vector_results = []  # TODO: Vector-based similarity retrieval
 
-@app.put("/unified_embeddings/{embedding_id}", response_model=UnifiedEmbedding)
-def update_unified_embedding(embedding_id: str, embedding: UnifiedEmbedding):
-    doc_ref = db.collection("unified_embeddings").document(embedding_id)
-    doc_ref.update(embedding.dict(by_alias=True))
-    updated_doc = doc_ref.get()
-    return UnifiedEmbedding(**updated_doc.to_dict())
+# 11. Fusion
+# Input: bm25_results, vector_results
+# Output: fused_results (list[dict{'product': Product, 'score': float}])
+fused_results = []  # TODO: Combine result lists with weights/strategy
 
-@app.delete("/unified_embeddings/{embedding_id}")
-def delete_unified_embedding(embedding_id: str):
-    db.collection("unified_embeddings").document(embedding_id).delete()
-    return {"detail": "UnifiedEmbedding deleted"}
+# 12. Update query log
+# Input: raw_query, refined_query
+# Output: updated query_log
+# TODO: Log and persist final query log state
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+# 13. Close session
+# Input: session
+# Output: None
+# TODO: Finalize and close session
