@@ -140,16 +140,3 @@ products = [
         locale="en"
     )
 ]
-
-# Test query
-query = "noise cancelling bluetooth headphones"
-
-# Run retrieval
-retriever = BM25CandidateRetriever(products)
-results = retriever.retrieve(query)
-
-# Display results
-for result in results:
-    product = result["product"]
-    score = result["score"]
-    print(f"Product ID: {product.id}, Title: {product.title}, Score: {score:.4f}")
