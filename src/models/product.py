@@ -18,18 +18,6 @@ class Product(BaseModel):
 
     class Config:
         populate_by_name = True
-        # json_schema_extra = {
-        #     "example": {
-        #         "product_id": "B079VKKJN7",  # Use ALIASES here
-        #         "product_title": "11 Degrees Playera...",
-        #         "product_description": "Esta playera...",
-        #         "product_bullet_point": "11 Degrees Negro...",
-        #         "product_brand": "11 Degrees",
-        #         "product_color": "Negro",
-        #         "product_locale": "es",
-        #         "embedding": [1.0, 1.0, 1.0]
-        #     }
-        # }
     
     @field_validator('embedding', mode='before')
     def parse_embedding(cls, value):
@@ -47,7 +35,7 @@ class Product(BaseModel):
         
         doc_ref = db.collection("Products").document(product_id)
         doc = doc_ref.get()
-        
+
         if not doc.exists:
             raise ValueError(f"Product {product_id} not found")
             
@@ -79,3 +67,20 @@ class Product(BaseModel):
         docs = products_ref.stream()
         
         return [cls(**doc.to_dict()) for doc in docs]
+    
+    def update_embedding(self, embedding: List[float]):
+        """
+        Update the product's embedding in Firestore.
+        
+        Args:
+            embedding: List of floats representing the new embedding
+        """
+        from src.db.firebase_client import db
+        
+        # Update local instance
+        self.embedding = embedding
+        
+        # Update Firestore document
+        db.collection("Products").document(self.id).update({
+            "embedding": embedding  # Direct field name match in Firestore
+        })

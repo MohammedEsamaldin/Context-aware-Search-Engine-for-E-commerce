@@ -5,16 +5,17 @@ numpy>=1.21.0             # Numerical operations
 scipy>=1.7.0              # Scientific computing
 pandas>=2.0.0             # Data manipulation
 networkx>=2.6             # Graph operations
-# annoy>=1.17.3             # Approximate nearest neighbors
+# annoy>=1.17.3           # Approximate nearest neighbors
 python-dateutil>=2.8.2    # Date/time handling
 python-dotenv>=1.1.0      # Environment variable management
+tqdm>=4.0.0               # Progress bars 
 
 ##========================
 # API & Web Server
 ##========================
 fastapi>=0.110.0          # API framework
 uvicorn[standard]>=0.29.0 # ASGI server
-pydantic>=1.9.0           # Data validation
+pydantic>=2.0.0           # Data validation # pydantic>=1.9.0
 
 ##========================
 # NLP & Search
