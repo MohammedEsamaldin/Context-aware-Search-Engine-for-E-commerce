@@ -13,15 +13,18 @@ Team members: Please stick to the input/output contracts and update your section
 """
 import sys
 import os
+import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.models.session import Session
 from src.models.product import Product
 from src.models.query_log import QueryLog
 from src.models.user import UserProfile
-
+from src.modules.Dynamic_context_modelling.Session_Graph_Builder import SessionGraphEmbedder, SessionGraphBuilder ,UserProfileEmbedder, ContextFusion
+from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
 from src.modules.fusion.fuse import fuse_candidates
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
+
 
 ## Initialise
 # user = UserProfile.create_with_generated_id(
@@ -102,6 +105,42 @@ query_log = QueryLog.get(dummy_log_id)
 # 6. Update session graph
 # Input: query_log (QueryLog), session (Session object)
 # Output: session_graph (SessionGraph object)
+
+with open("path/session.json") as f:
+    session_data = json.load(f)
+
+with open("path/users.json") as f:
+    user_data = json.load(f)
+
+# Build session graph (optional if using weights from dataset)
+graph_builder = SessionGraphBuilder()
+session_graphs = graph_builder.build_graph(session_data)
+
+# Embed session transitions
+session_embedder = SessionGraphEmbedder()
+session_vectors = session_embedder.embed_session_graphs(session_data)
+
+# Embed user profiles
+user_embedder = UserProfileEmbedder()
+user_vectors = user_embedder.embed_users(user_data)
+
+# Fuse embeddings into unified context vector per user
+fuser = ContextFusion(alpha=0.5)
+context_vectors = fuser.fuse(session_vectors, user_vectors)
+
+# Example: Get the context vector for a specific user
+target_user_id = "user002"
+
+alpha = 0.6  # You can tune this weight
+query_vector = []
+if target_user_id in context_vectors:
+    context_vec = context_vectors[target_user_id]
+    fused_vector = alpha * query_vector + (1 - alpha) * context_vec
+    # print(f"Fused vector shape: {fused_vector.shape}")
+    print(f"Fused vector preview: {fused_vector[:5]}")
+else:
+    print(f"User {target_user_id} not found in context vectors.")
+
 session_graph = None  # TODO: Update session graph structure
 
 # 7. Preprocess query
@@ -129,6 +168,13 @@ bm25_results = retriever.retrieve(query_log.refined_query)
 # 10. Vector search
 # Input: query_log.embedding (list of floats), products (list of Product)
 # Output: vector_results (list[dict{'product': Product, 'score': float}])
+
+# Load the index and search
+#  requierments :
+    # embedding_dim = product_embeddings.shape[1]   this is the dimentions of the product embeddings
+    # product_df = the dataframe which contain product id and details
+engine = ProductSearchEngine(embedding_dim=embedding_dim, index_path='product_index.ann', product_df=product_df)
+
 vector_results = []  # TODO: Vector-based similarity retrieval
 
 query_log.update_retrieval(bm25_results=bm25_results, vector_results=vector_results)
