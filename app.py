@@ -122,6 +122,14 @@ query_log.update_embedding(embedding=query_embedding)
 # Output: bm25_results (list[dict{'product': Product, 'score': float}])
 bm25_results = []  # TODO: Apply BM25 ranking
 
+# from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
+# # Test query
+# query = "noise cancelling bluetooth headphones"
+
+# # Run retrieval
+# retriever = BM25CandidateRetriever(products)
+# results = retriever.retrieve(query)
+
 # 10. Vector search
 # Input: query_log.embedding (list of floats), products (list of Product)
 # Output: vector_results (list[dict{'product': Product, 'score': float}])
