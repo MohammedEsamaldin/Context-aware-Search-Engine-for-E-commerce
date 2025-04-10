@@ -1,5 +1,5 @@
 from src.utils.normalization import normalize_scores
-import math
+# import math
 
 def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
     """
