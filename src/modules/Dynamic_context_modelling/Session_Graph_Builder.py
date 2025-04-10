@@ -13,16 +13,17 @@ class SessionGraphBuilder:
         Output: {userId: {from_query: {to_query: weighted_value}}}
         """
         for session in session_data:
-            user_id = session['userId']
-            transitions = session['transitions']
+            user_id = session.user_id  # Updated to use attribute, not dictionary key
+            transitions = session.transitions  # Same here
+
             if user_id not in self.session_graphs:
                 self.session_graphs[user_id] = {}
 
             for trans in transitions:
-                from_q = trans['from']
-                to_q = trans['to']
-                base_weight = trans['weight']
-                delta_t = trans['timeDifference']
+                from_q = trans.from_query  # Adjust this based on your class definition
+                to_q = trans.to     # Adjust this based on your class definition
+                base_weight = trans.weight
+                delta_t = trans.time_difference
 
                 # Apply recency decay
                 recency_weight = base_weight * math.exp(-self.lambda_recency * delta_t)
@@ -46,17 +47,17 @@ class SessionGraphEmbedder:
         session_vectors = {}
 
         for session in session_data:
-            user_id = session['userId']
-            queries = {q['queryId']: q['text'] for q in session['queries']}
-            transitions = session['transitions']
+            user_id = session.user_id  # Access user_id attribute
+            queries = {q.id: q.text for q in session.queries}  # Assuming 'queries' is a list of QueryNode objects
+            transitions = session.transitions  # Assuming 'transitions' is a list of Transition objects
 
             weighted_embeddings = []
             total_weight = 0
 
             for trans in transitions:
-                from_id = trans['from']
-                to_id = trans['to']
-                weight = trans['weight']
+                from_id = trans.from_query  # Adjust based on actual attribute name
+                to_id = trans.to     # Adjust based on actual attribute name
+                weight = trans.weight
 
                 from_text = queries.get(from_id)
                 to_text = queries.get(to_id)
@@ -77,7 +78,6 @@ class SessionGraphEmbedder:
 
         return session_vectors
 
-
 class UserProfileEmbedder:
     def __init__(self, model_name='paraphrase-MiniLM-L6-v2'):
         self.model = SentenceTransformer(model_name)
@@ -88,14 +88,25 @@ class UserProfileEmbedder:
         Output: {userId: embedding_vector}
         """
         user_embeddings = {}
+        
         for user in user_data:
-            user_id = user['userId']
-            brands = user['preferences'].get('favoriteBrands', [])
-            interests = user['preferences'].get('interests', [])
+            user_id = user.id  # Accessing user ID correctly from UserProfile instance
+            
+            # Safely access preferences, check if preferences is not None
+            brands = user.preferences.favorite_brands if user.preferences else []
+            interests = user.preferences.interests if user.preferences else []
+            
+            # Combine favorite brands and interests into a single profile text
             profile_text = " ".join(brands + interests)
+            
+            # Create embedding for profile text
             embedding = self.model.encode(profile_text)
+            
+            # Store the embedding in the dictionary
             user_embeddings[user_id] = embedding
+            
         return user_embeddings
+
 class ContextFusion:
     def __init__(self, alpha=0.5):
         """
