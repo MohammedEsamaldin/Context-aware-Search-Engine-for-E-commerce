@@ -14,6 +14,11 @@ Team members: Please stick to the input/output contracts and update your section
 import sys
 import os
 import json
+
+from src.modules.preprocessor.preprocessor import QueryPreprocessor
+from src.modules.preprocessor.prompt_builder import PromptBuilder
+from src.services.openai_client import OpenAIClient
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.models.session import Session
@@ -48,7 +53,6 @@ session_id = 'c6PKuTerJRUqbDoUzmvB'
 session = Session.load(session_id=session_id)
 print(f"\nNew session {session.id} for user {user.id} started at {session.start_time}")
 
-
 # NOTE: Riya - this step needs to be initialised first, because a session creation is dependent on user_id
 # 2. Get user info from DB
 # Input: session.user_id
@@ -79,7 +83,7 @@ raw_query = "example query"
 #     print(f"Latest query ID: {latest.id}")
 #     print(f"Query text: {latest.text}")
 #     print(f"Timestamp: {latest.timestamp}")
-    
+
 # print(f"Total transitions: {len(session.transitions)}")
 # if session.transitions:
 #     latest = session.transitions[-1]
@@ -144,11 +148,10 @@ else:
 session_graph = None  # TODO: Update session graph structure
 
 # 7. Preprocess query
-# Input: query_log.raw_query (str)
-# Output: query_log.refined_query (str)
-# TODO: Clean and refine query, update QueryLog
-refined_query = "this is a refined query"
-query_log.update_refined_query(refined_query=refined_query)
+gpt_client = OpenAIClient()
+preprocessor = QueryPreprocessor(prompt_builder=PromptBuilder(), openai_client=gpt_client)
+refined_query = preprocessor.preprocess(query_log, user)
+query_log.update_refined_query(refined_query=refined_query["normalized_query"])
 
 # # 8. Embed refined query
 # # Input: query_log.refined_query (str)
@@ -184,7 +187,6 @@ query_log.update_retrieval(bm25_results=bm25_results, vector_results=vector_resu
 # Output: fused_results (list[dict{'product': Product, 'score': float}])
 fused_result = []  # TODO: Combine result lists with weights/strategy
 fused_result = fuse_candidates(bm25_candidates=bm25_results, vector_candidates=vector_results)
-
 
 # 12. Update query log
 # Input: raw_query, refined_query
