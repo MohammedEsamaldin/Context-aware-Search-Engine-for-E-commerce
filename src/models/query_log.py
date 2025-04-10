@@ -100,13 +100,15 @@ class QueryLog(BaseModel):
             "queryEmbedding": embedding
         })
 
-    def update_retrieval(self, bm25_results: List[str], vector_results: List[str]):
+    def update_retrieval(self, bm25_results: List[dict], vector_results: List[dict]):
         """Update retrieval results"""
         from src.db.firebase_client import db
+        bm25_ids = [item["product_id"] for item in bm25_results]
+        vector_ids = [item["product_id"] for item in vector_results]
         
         self.retrieval_results = RetrievalResults(
-            bm25=bm25_results,
-            vector=vector_results
+            bm25=bm25_ids,
+            vector=vector_ids
         )
         db.collection("QueryLogs").document(self.id).update({
             "retrievalResults": self.retrieval_results.model_dump(by_alias=True)
