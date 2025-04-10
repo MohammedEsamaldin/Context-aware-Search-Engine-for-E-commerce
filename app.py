@@ -25,6 +25,8 @@ from src.models.session import Session
 from src.models.product import Product
 from src.models.query_log import QueryLog
 from src.models.user import UserProfile
+from src.models.unified_embedding import UnifiedEmbedding
+
 from src.modules.Dynamic_context_modelling.Session_Graph_Builder import SessionGraphEmbedder, SessionGraphBuilder ,UserProfileEmbedder, ContextFusion
 from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
 from src.modules.fusion.fuse import fuse_candidates
@@ -152,6 +154,13 @@ gpt_client = OpenAIClient()
 preprocessor = QueryPreprocessor(prompt_builder=PromptBuilder(), openai_client=gpt_client)
 refined_query = preprocessor.preprocess(query_log, user)
 query_log.update_refined_query(refined_query=refined_query["normalized_query"])
+
+## ===== Unified Context Vectorisation
+
+fused_vector = []
+unified_embedding = UnifiedEmbedding.create(user_id=user.id, session_id=session.id, query=refined_query, embedding=fused_vector)
+
+## =====
 
 # # 8. Embed refined query
 # # Input: query_log.refined_query (str)
