@@ -135,7 +135,7 @@ query_vector = []
 if target_user_id in context_vectors:
     context_vec = context_vectors[target_user_id]
     fused_vector = alpha * query_vector + (1 - alpha) * context_vec
-    print(f"Fused vector shape: {fused_vector.shape}")
+    # print(f"Fused vector shape: {fused_vector.shape}")
     print(f"Fused vector preview: {fused_vector[:5]}")
 else:
     print(f"User {target_user_id} not found in context vectors.")
