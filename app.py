@@ -1,6 +1,8 @@
 import sys
 import os
 
+import numpy as np
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.modules.preprocessor.preprocessor import QueryPreprocessor
@@ -13,7 +15,8 @@ from src.models.query_log import QueryLog
 from src.models.user import UserProfile
 from src.models.unified_embedding import UnifiedEmbedding
 
-from src.modules.Dynamic_context_modelling.Session_Graph_Builder import SessionGraphEmbedder, SessionGraphBuilder ,UserProfileEmbedder, ContextFusion
+from src.modules.Dynamic_context_modelling.Session_Graph_Builder import SessionGraphEmbedder, SessionGraphBuilder, \
+    UserProfileEmbedder, ContextFusion
 from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
 from src.modules.fusion.fuse import fuse_candidates
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
@@ -39,12 +42,13 @@ print(f"\nNew session {session.id} for user {user.id} started at {session.start_
 products = Product.load_all()
 print("\nSample Product Title:", products[0].title)
 
-# Initialization and creating indices
+##Initialization and creating indices
 embedding_service = EmbeddingService()
 products_with_embedding = [p for p in products if p.embedding]
 engine = ProductSearchEngine(embedding_dim=1536, index_path="products.ann", products=products)
 ProductSearchEngine.build_index(products_with_embedding, "products.ann")
 retriever = BM25CandidateRetriever(products)
+
 
 # 4. Fill query inside session
 session.add_query(raw_query)
@@ -59,7 +63,24 @@ query_log = QueryLog.create(
 )
 print(f"\nQuery log {query_log.id} added at {query_log.timestamp}")
 
-# 5. Update session graph
+# 6. Update session graph
+# Correct usage: Pass a list of UserProfile objects
+user_data_for_emb = [UserProfile.get("U78644")]  # A list containing UserProfile objects
+
+# user_vectors = user_embedder.embed_users(user_data)
+
+# Assuming 'session' is a Session object and 'user_data' is a list of UserProfile objects
+graph_builder = SessionGraphBuilder()
+session_graphs = graph_builder.build_graph([session])  # Pass session as a list of sessions
+
+session_embedder = SessionGraphEmbedder()
+session_vectors = session_embedder.embed_session_graphs([session])  # Again pass as a list
+
+user_embedder = UserProfileEmbedder()
+user_vectors = user_embedder.embed_users(user_data_for_emb)  # Pass the correct user data here
+
+fuser = ContextFusion(alpha=0.5)
+context_vectors = fuser.fuse(session_vectors, user_vectors)
 
 # 7. Preprocess and Embed Query
 gpt_client = OpenAIClient()
@@ -67,10 +88,20 @@ preprocessor = QueryPreprocessor(prompt_builder=PromptBuilder(), openai_client=g
 refined_query = preprocessor.preprocess(query_log, user)
 query_log.update_refined_query(refined_query=refined_query["normalized_query"])
 
-## ===== Unified Context Vectorisation
+##8. Unified Context Vectorisation
+alpha = 0.6  # You can tune this weight
+target_user_id = user.id
+query_vector = np.array(query_log.embedding)
+fused_vector = []
+if target_user_id in context_vectors:
+    context_vec = np.array(context_vectors[target_user_id])
+    print(context_vec)
+    fused_vector = alpha * query_vector + (1 - alpha) * context_vec
+print(type(fused_vector))
 
 fused_vector = []
-unified_embedding = UnifiedEmbedding.create(user_id=user.id, session_id=session.id, query=refined_query, embedding=fused_vector)
+unified_embedding = UnifiedEmbedding.create(user_id=user.id, session_id=session.id, query=refined_query,
+                                            embedding=fused_vector)
 
 ## =====
 query_embedding = embedding_service.embed_sentences([query_log.refined_query])
