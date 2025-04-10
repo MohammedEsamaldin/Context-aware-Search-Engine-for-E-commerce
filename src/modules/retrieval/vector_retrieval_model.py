@@ -1,34 +1,41 @@
 # annoy_search.py
 from annoy import AnnoyIndex
-import numpy as np
 import pandas as pd
 
+from src.models import Product
+
+
 class ProductSearchEngine:
-    def __init__(self, embedding_dim, index_path, product_df):
+    def __init__(self, embedding_dim, index_path, products: list[Product]):
         self.embedding_dim = embedding_dim
         self.index_path = index_path
-        self.product_df = product_df
+        self.products = products
         self.index = AnnoyIndex(embedding_dim, 'angular')
         self.index.load(index_path)
 
     def search(self, query_embedding, k=5):
         nearest_neighbors = self.index.get_nns_by_vector(query_embedding, k, include_distances=True)
-        
-        # Format results as a structured DataFrame
+
         results = []
         for idx, dist in zip(*nearest_neighbors):
+            product = self.products[idx]
             results.append({
-                "Product ID": self.product_df['product_id'][idx],
-                "Product Title": self.product_df['product_title'][idx],
-                "Distance": round(dist, 3)
+                "product_id": product.id,
+                "score": round(dist, 3)
             })
         return pd.DataFrame(results)
 
     @staticmethod
-    def build_index(embeddings, index_path):
-        embedding_dim = embeddings.shape[1]
+    def build_index(products: list[Product], index_path: str):
+        if not products:
+            raise ValueError("No products provided.")
+
+        embedding_dim = len(products[0].embedding)
         index = AnnoyIndex(embedding_dim, 'angular')
-        for i, vec in enumerate(embeddings):
-            index.add_item(i, vec)
-        index.build(100)  # You can tune the number of trees
+
+        for i, product in enumerate(products):
+            if product.embedding:
+                index.add_item(i, product.embedding)
+
+        index.build(100)
         index.save(index_path)
