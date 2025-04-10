@@ -5,12 +5,13 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from rank_bm25 import BM25Okapi
-from src.models.product import Product 
+from src.models.product import Product
 
 # Download NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('punkt_tab')
+
 
 class BM25CandidateRetriever:
     """
@@ -104,7 +105,7 @@ class BM25CandidateRetriever:
         for idx in top_indices:
             product = self.index_to_product[idx]
             results.append({
-                "product": product,
+                "product_id": product.id,
                 "score": float(scores[idx]),
             })
         return results

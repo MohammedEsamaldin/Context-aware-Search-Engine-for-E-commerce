@@ -9,3 +9,4 @@ config/*.json
 *.pyc
 *.iml
 *.xml
+*.pyc

@@ -1,4 +1,6 @@
 from src.utils.normalization import normalize_scores
+
+
 # import math
 
 def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
@@ -22,7 +24,7 @@ def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
     """
     if not bm25_candidates or not vector_candidates:
         raise ValueError("Input lists cannot be empty.")
-    
+
     for cand in bm25_candidates:
         if "score" not in cand:
             raise ValueError("Missing 'score' field in BM25 candidates.")
@@ -41,48 +43,48 @@ def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
     norm_bm25 = normalize_scores(bm25_scores, mode='min-max')
     for idx, cand in enumerate(bm25_candidates):
         cand["norm_BM25"] = norm_bm25[idx]
-    
+
     ## Normalise vector (cosine similarity) scores.
     vector_scores = [cand["score"] for cand in vector_candidates]
     norm_vector = normalize_scores(vector_scores, mode='min-max')
     for idx, cand in enumerate(vector_candidates):
         cand["norm_Vector"] = norm_vector[idx]
-    
+
     ## Merge candidates by productId.
     merged = {}
     for cand in bm25_candidates:
-        pid = cand["productId"]
+        pid = cand["product_id"]
         merged[pid] = {
-            "productId": pid,
+            "product_id": pid,
             "norm_BM25": cand.get("norm_BM25", 0.0),
             "norm_Vector": 0.0  # default if missing in vector_candidates
         }
-    
+
     for cand in vector_candidates:
         pid = cand["productId"]
         if pid in merged:
             merged[pid]["norm_Vector"] = cand.get("norm_Vector", 0.0)
         else:
             merged[pid] = {
-                "productId": pid,
+                "product_id": pid,
                 "norm_BM25": 0.0,  # default if missing in bm25_candidates
                 "norm_Vector": cand.get("norm_Vector", 0.0)
             }
-    
+
     # Compute final scores (get up to 3 decimal places)
     final_candidates = []
     for pid, scores in merged.items():
         final_score = beta * scores["norm_BM25"] + (1 - beta) * scores["norm_Vector"]
         final_candidates.append({
-            "productId": pid,
+            "product_id": pid,
             "score": round(final_score, 3)
         })
-    
+
     # Sort in descending order of finalScore.
     final_candidates.sort(key=lambda x: x["score"], reverse=True)
-    
+
     # Truncate to top_n if specified.
     if top_n is not None:
         final_candidates = final_candidates[:top_n]
-    
+
     return final_candidates
