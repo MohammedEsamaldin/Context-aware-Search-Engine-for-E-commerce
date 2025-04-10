@@ -91,15 +91,8 @@ query_log.update_refined_query(refined_query=refined_query["normalized_query"])
 ##8. Unified Context Vectorisation
 alpha = 0.6  # You can tune this weight
 target_user_id = user.id
-query_vector = np.array(query_log.embedding)
-fused_vector = []
-if target_user_id in context_vectors:
-    context_vec = np.array(context_vectors[target_user_id])
-    print(context_vec)
-    fused_vector = alpha * query_vector + (1 - alpha) * context_vec
-print(type(fused_vector))
-
-fused_vector = []
+query_vector = query_log.embedding
+fused_vector = fuse_vectors(alpha =0.6, user_id = target_user_id, query_vector = query_vector, context_vector = context_vectors)
 unified_embedding = UnifiedEmbedding.create(user_id=user.id, session_id=session.id, query=refined_query,
                                             embedding=fused_vector)
 
