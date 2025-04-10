@@ -21,6 +21,7 @@ from src.models.query_log import QueryLog
 from src.models.user import UserProfile
 
 from src.modules.fusion.fuse import fuse_candidates
+from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
 
 ## Initialise
 # user = UserProfile.create_with_generated_id(
@@ -122,13 +123,8 @@ query_log.update_embedding(embedding=query_embedding)
 # Output: bm25_results (list[dict{'product': Product, 'score': float}])
 bm25_results = []  # TODO: Apply BM25 ranking
 
-# from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
-# # Test query
-# query = "noise cancelling bluetooth headphones"
-
-# # Run retrieval
-# retriever = BM25CandidateRetriever(products)
-# results = retriever.retrieve(query)
+retriever = BM25CandidateRetriever(products)
+bm25_results = retriever.retrieve(query_log.refined_query)
 
 # 10. Vector search
 # Input: query_log.embedding (list of floats), products (list of Product)
