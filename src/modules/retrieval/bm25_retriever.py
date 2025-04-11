@@ -8,9 +8,9 @@ from rank_bm25 import BM25Okapi
 from src.models.product import Product
 
 # Download NLTK data
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('punkt_tab')
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('punkt_tab', quiet=True)
 
 
 class BM25CandidateRetriever:
@@ -71,8 +71,8 @@ class BM25CandidateRetriever:
             text_parts = [product.title]
             if product.description:
                 text_parts.append(product.description)
-            if product.bullet_point:
-                text_parts.append(product.bullet_point)
+            if product.bulletPoint:
+                text_parts.append(product.bulletPoint)
             full_text = " ".join(text_parts)
             tokens = self.preprocess_text(full_text)
             self.documents.append(tokens)

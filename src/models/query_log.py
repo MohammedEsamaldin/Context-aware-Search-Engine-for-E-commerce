@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import List, Optional
-from google.cloud.firestore import Client
+# from google.cloud.firestore import ArrayUnion
 
 class RetrievalResults(BaseModel):
     bm25: List[str] = Field(..., alias="BM25")

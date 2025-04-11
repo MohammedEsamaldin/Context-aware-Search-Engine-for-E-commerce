@@ -5,7 +5,7 @@ numpy>=1.21.0             # Numerical operations
 scipy>=1.7.0              # Scientific computing
 pandas>=2.0.0             # Data manipulation
 networkx>=2.6             # Graph operations
-# annoy>=1.17.3           # Approximate nearest neighbors
+# annoy>=1.17.3             # Approximate nearest neighbors
 python-dateutil>=2.8.2    # Date/time handling
 python-dotenv>=1.1.0      # Environment variable management
 tqdm>=4.0.0               # Progress bars 
@@ -23,6 +23,10 @@ pydantic>=2.0.0           # Data validation # pydantic>=1.9.0
 nltk>=3.8.1               # Natural Language Toolkit
 rank_bm25>=0.2.2          # BM25 ranking algorithm
 openai>=1.12.0            # OpenAI SDK
+
+sentence-transformers>=2.2.2
+torch>=2.0.1
+transformers>=4.32.0
 
 ##========================
 # Firebase

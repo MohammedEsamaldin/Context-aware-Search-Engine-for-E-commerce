@@ -1,6 +1,6 @@
 import numpy as np
 
-def fuse_vectors(alpha =0.6, user_id, query_vector, context_vector):
+def fuse_vectors(user_id, query_vector, context_vector, alpha=0.6):
     """
     Fuses the query vector and context vector based on a given weight (alpha).
 
