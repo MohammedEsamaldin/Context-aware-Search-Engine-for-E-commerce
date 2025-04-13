@@ -1,32 +1,28 @@
 import numpy as np
 
-def fuse_vectors(user_id, query_vector, context_vector, alpha=0.6):
-    """
-    Fuses the query vector and context vector based on a given weight (alpha).
+class VectorFuser:
+    def __init__(self, alpha=0.5):
+        """
+        Initializes the fuser with a given weight alpha.
+        alpha: weight for query vector in fusion (e.g. 0.6 means 60% query, 40% context)
+        """
+        self.alpha = alpha
 
-    Args:
-    - alpha (float): The weight to balance between the query vector and context vector.
-    - user_id (str): The user ID whose context vector is to be used.
-    - query_log (object): The query log object containing the query embedding.
-    - context_vectors (dict): Dictionary of context vectors for users, with user IDs as keys.
+    def __call__(self, query_vector, context_vector):
+        """
+        Fuses the query and context vectors.
 
-    Returns:
-    - fused_vector (numpy array): The weighted sum of the query vector and context vector.
-    """
-    # Initialize the query vector from the query_log's embedding
-    query_vector = np.array(query_vector)
-    
-    # Initialize an empty list for the fused vector (though it will be a numpy array)
-    fused_vector = []
-    
-    # Check if the target user_id exists in context_vectors
-    if user_id in context_vectors:
-        # Get the context vector for the target user_id and convert it to numpy array
-        context_vec = np.array(context_vectors[user_id])
-        
-        # Perform element-wise multiplication and fusion
-        fused_vector = alpha * query_vector + (1 - alpha) * context_vec
-    else:
-        return 
-    
-    return fused_vector
+        Args:
+            query_vector (array-like): The embedding of the query.
+            context_vector (array-like or None): The user context embedding.
+
+        Returns:
+            numpy.ndarray or None: The fused vector or None if context is missing.
+        """
+        if context_vector is None:
+            return None
+
+        query_vector = np.array(query_vector)
+        context_vector = np.array(context_vector)
+
+        return self.alpha * query_vector + (1 - self.alpha) * context_vector
