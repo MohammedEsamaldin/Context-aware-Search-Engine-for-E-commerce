@@ -45,8 +45,8 @@ class Session(BaseModel):
         
         # Use field names (not aliases) for initialization
         session = cls(
-            id=session_ref.id,  # Use field name 'id' not alias 'sessionId'
-            user_id=user_id,  # Use field name 'user_id' not alias 'userId'
+            id=session_ref.id,
+            user_id=user_id,
             start_time=datetime.now(timezone.utc),
             queries=[],
             transitions=[]
@@ -68,7 +68,7 @@ class Session(BaseModel):
         from src.db.firebase_client import db
         # Use self.id instead of self.sessionId
         db.collection("Sessions").document(self.id).set(
-            self.dict(by_alias=True), 
+            self.model_dump(by_alias=True),
             merge=True
         )
     
@@ -77,7 +77,7 @@ class Session(BaseModel):
         from firebase_admin.firestore import ArrayUnion
         import math
 
-        print(f"\n=== Adding query: {query_text} ===")
+        # print(f"\n=== Adding query: {query_text} ===")
         
         # Create new query
         new_query = QueryNode(
@@ -120,12 +120,7 @@ class Session(BaseModel):
                 "transitions": ArrayUnion([transition.model_dump(by_alias=True)])
             })
             # print("Transition added to Firestore")
-            
-            # Update local instance
             self.transitions.append(transition)
-            # print(f"Local transitions count: {len(self.transitions)}")
-        # else:
-        #     print("No transition created - first query in session")
     
     def terminate(self):
         """Mark session as ended and update Firestore"""

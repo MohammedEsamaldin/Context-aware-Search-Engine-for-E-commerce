@@ -8,9 +8,9 @@ from rank_bm25 import BM25Okapi
 from src.models.product import Product
 
 # Download NLTK data
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('punkt_tab')
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('punkt_tab', quiet=True)
 
 
 class BM25CandidateRetriever:
@@ -71,8 +71,8 @@ class BM25CandidateRetriever:
             text_parts = [product.title]
             if product.description:
                 text_parts.append(product.description)
-            if product.bullet_point:
-                text_parts.append(product.bullet_point)
+            if product.bulletPoint:
+                text_parts.append(product.bulletPoint)
             full_text = " ".join(text_parts)
             tokens = self.preprocess_text(full_text)
             self.documents.append(tokens)
@@ -84,21 +84,20 @@ class BM25CandidateRetriever:
         """
         self.bm25 = BM25Okapi(self.documents)
 
-    def retrieve(self, refined_query: str) -> List[Dict[str, object]]:
+    def retrieve(self, refined_query: str, top_k=5) -> List[Dict[str, object]]:
         """
-        Retrieve the top 5 most relevant products based on BM25 scores.
+        Retrieve the top k most relevant products based on BM25 scores.
 
         Args:
             refined_query (str): The cleaned query string (from QueryLog.refined_query).
 
         Returns:
-            List[Dict[str, object]]: A list of top-5 matches, each a dictionary with:
+            List[Dict[str, object]]: A list of top-k matches, each a dictionary with:
                 - "product": Product object
                 - "score": BM25 relevance score as float
         """
         query_tokens = refined_query.split()
         scores = self.bm25.get_scores(query_tokens)
-        top_k = 5
         top_indices = scores.argsort()[::-1][:top_k]
 
         results = []

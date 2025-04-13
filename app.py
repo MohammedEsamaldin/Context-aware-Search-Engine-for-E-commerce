@@ -20,12 +20,12 @@ from src.modules.Dynamic_context_modelling.Session_Graph_Builder import SessionG
 from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
 from src.modules.fusion.fuse import fuse_candidates
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
-from src.modules.Dynamic_context_modelling.Session_Graph_Builder import fusion
+from src.modules.Dynamic_context_modelling.fusion import fuse_vectors
 
 # Hard code for now:
 user_id = 'U78644'
 session_id = 'c6PKuTerJRUqbDoUzmvB'
-raw_query = "example query"
+raw_query = "home decors cheap"
 
 # 1. Create user
 user = UserProfile.get(user_id=user_id)

@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -16,6 +20,7 @@ class UserProfile(BaseModel):
     email: str
     preferences: Optional[Preferences] = None
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), alias="lastLogin")
+    embedding: Optional[List[float]] = Field(None, alias="userEmbedding")
 
     class Config:
         populate_by_name = True
@@ -27,7 +32,8 @@ class UserProfile(BaseModel):
         name: str,
         email: str,
         favorite_brands: Optional[List[str]] = None,
-        interests: Optional[List[str]] = None
+        interests: Optional[List[str]] = None,
+        embedding: Optional[List[float]] = None
     ) -> "UserProfile":
         """Create user profile with specified ID"""
         from src.db.firebase_client import db
@@ -45,7 +51,8 @@ class UserProfile(BaseModel):
             "userId": user_id,
             "name": name,
             "email": email,
-            "lastLogin": datetime.now(timezone.utc)
+            "lastLogin": datetime.now(timezone.utc),
+            "embedding": embedding
         }
         if preferences:
             user_data["preferences"] = preferences.model_dump(by_alias=True)
@@ -100,21 +107,39 @@ class UserProfile(BaseModel):
 
     @classmethod
     def get(cls, user_id: str) -> "UserProfile":
-        """Retrieve user profile from Firestore"""
+        """Improved with explicit field mapping"""
         from src.db.firebase_client import db
         
-        doc = db.collection("Users").document(user_id).get()
+        doc_ref = db.collection("Users").document(user_id)
+        doc = doc_ref.get()
+        
         if not doc.exists:
             raise ValueError(f"User {user_id} not found")
             
         data = doc.to_dict()
+        
+        # Explicitly map Firestore fields to model aliases
         return cls(
-            userId=user_id,
-            name=data["name"],
-            email=data["email"],
+            userId=user_id,  # Ensures ID matches document ID
+            name=data.get("name"),
+            email=data.get("email"),
             preferences=Preferences(**data["preferences"]) if "preferences" in data else None,
-            lastLogin=data["lastLogin"]
+            lastLogin=data.get("lastLogin"),
+            userEmbedding=data.get("embedding")  # Direct map using Firestore field name
         )
+    
+    @classmethod
+    def get_all(cls) -> list["UserProfile"]:
+        """Load all user profiles from Firestore"""
+        from src.db.firebase_client import db
+        
+        users_ref = db.collection("Users")
+        docs = users_ref.stream()
+        
+        return [cls(
+            # Map document ID to product_id alias
+            **{"userId": doc.id, **doc.to_dict()}
+        ) for doc in docs]
 
     def save(self):
         """Full profile update"""
@@ -158,3 +183,19 @@ class UserProfile(BaseModel):
         db.collection("Users").document(self.id).update({
             "lastLogin": self.last_login
         })
+
+    def update_embedding(self, embedding: List[float]):
+        from src.db.firebase_client import db
+        
+        # Update local instance
+        self.embedding = embedding
+        
+        # Update Firestore document
+        db.collection("Users").document(self.id).update({
+            "embedding": embedding  # Direct field name match in Firestore
+        })
+
+# if __name__ == "__main__":
+#     # U78644
+#     user = UserProfile.get('U78644')
+#     print(user)
