@@ -100,33 +100,65 @@ class QueryLog(BaseModel):
             "queryEmbedding": embedding
         })
 
-    def update_retrieval(self, bm25_results: List[dict], vector_results: List[dict]):
-        """Update retrieval results"""
-        from src.db.firebase_client import db
-        bm25_ids = [item["product_id"] for item in bm25_results]
-        vector_ids = [item["product_id"] for item in vector_results]
-        
-        self.retrieval_results = RetrievalResults(
-            bm25=bm25_ids,
-            vector=vector_ids
-        )
-        db.collection("QueryLogs").document(self.id).update({
-            "retrievalResults": self.retrieval_results.model_dump(by_alias=True)
-        })
+    def update_results(
+        self,
+        bm25_results: Optional[List[str]] = None,
+        vector_results: Optional[List[str]] = None,
+        final_results: Optional[List[str]] = None
+    ):
+        """Update retrieval and final results in Firestore.
 
-    def add_final_result(self, new_result: Optional[List[str]] = None):
-        """Append to final results (handles empty/none lists safely)"""
+        :param bm25_results: List of product IDs from BM25 retrieval.
+        :param vector_results: List of product IDs from vector retrieval.
+        :param final_results: List of final product titles.
+        """
         from src.db.firebase_client import db
         from firebase_admin.firestore import ArrayUnion
+
+        # Update retrieval results if provided
+        if bm25_results is not None or vector_results is not None:
+            self.retrieval_results = RetrievalResults(
+                bm25=bm25_results if bm25_results is not None else [],
+                vector=vector_results if vector_results is not None else []
+            )
+            db.collection("QueryLogs").document(self.id).update({
+                "retrievalResults": self.retrieval_results.model_dump(by_alias=True)
+            })
+
+        # Update final results if provided and non-empty
+        if final_results:
+            self.final_result.extend(final_results)
+            db.collection("QueryLogs").document(self.id).update({
+                "finalResult": ArrayUnion(final_results)
+            })
+
+    # def update_retrieval(self, bm25_results: List[dict], vector_results: List[dict]):
+    #     """Update retrieval results"""
+    #     from src.db.firebase_client import db
+    #     bm25_ids = [item["product_id"] for item in bm25_results]
+    #     vector_ids = [item["product_id"] for item in vector_results]
         
-        # Handle None or empty list
-        if not new_result:
-            return  # No action needed
+    #     self.retrieval_results = RetrievalResults(
+    #         bm25=bm25_ids,
+    #         vector=vector_ids
+    #     )
+    #     db.collection("QueryLogs").document(self.id).update({
+    #         "retrievalResults": self.retrieval_results.model_dump(by_alias=True)
+    #     })
+
+    # def add_final_result(self, new_result: Optional[List[str]] = None):
+    #     """Append to final results (handles empty/none lists safely)"""
+    #     from src.db.firebase_client import db
+    #     from firebase_admin.firestore import ArrayUnion
         
-        # Update local instance
-        self.final_results.extend(new_result)
+    #     # Handle None or empty list
+    #     if not new_result:
+    #         return  # No action needed
         
-        # Update Firestore
-        db.collection("QueryLogs").document(self.id).update({
-            "finalResult": ArrayUnion(new_result)  # Correct alias
-        })
+    #     # Update local instance
+    #     self.final_results.extend(new_result)
+        
+    #     # Update Firestore
+    #     db.collection("QueryLogs").document(self.id).update({
+    #         "finalResult": ArrayUnion(new_result)  # Correct alias
+    #     })

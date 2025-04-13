@@ -1,7 +1,6 @@
 
 import sys
 import os
-import traceback
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from pydantic import ValidationError
@@ -27,14 +26,25 @@ from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
 from src.modules.fusion.fuse import fuse_candidates
 
 
-
 class CartSearchEngine:
     def __init__(self):
+        """
+        Parameters:
+        - current_user: UserProfile object for the current user
+        - current_session: Session object for the current session
+        - search_components: Dictionary containing initialized search components
+        - context_alpha: Float for session vs user context balance
+        - context_fusion_beta: Float for query vs context balance for unified embedding
+        - search_K: Integer for number of results to retrieve
+        - retrieval_fusion_beta: Float for fusion weight for BM25 and vector results
+        """
         self.current_user = None
         self.current_session = None
         self.search_components = None
-        self.context_alpha = 0.4  # Session vs user context balance
-        self.fusion_beta = 0.7    # Query vs context balance
+        self.context_alpha = 0.7            
+        self.context_fusion_beta = 0.8      
+        self.search_K = 10                  
+        self.retrieval_fusion_beta = 0.5
     
     def run(self):
         print("🛒 CART Search Engine")
@@ -64,7 +74,7 @@ class CartSearchEngine:
     
     def terminate_session(self):
         self.current_session.terminate()
-        print(f"\nSession terminated at {self.current_session.end_time}")
+        print(f"\nSession terminated at {self.current_session.end_time} with {len(self.current_session.queries)} queries.")
     
     def show_main_menu(self):
         try:
@@ -97,11 +107,9 @@ class CartSearchEngine:
                 query = input("\nSubmit your query: ").strip()
                 
                 # Add search implementation here
-                results = self.perform_search(query)
-                
-                print("\nSearch Results:")
-                for i, result in enumerate(results, 1):
-                    print(f"{i}. {result}")
+                self.perform_search(query)
+                print("\nSearch completed!")
+                print("-"*30)
                 
                 print("\nWhat would you like to do?")
                 print("1️⃣: Submit another query")
@@ -113,6 +121,7 @@ class CartSearchEngine:
                     self.terminate_session()
                     print(f"Goodbye, {self.current_user.name} 😃👋!\n")
                     exit()
+
         finally:
             if self.current_session and not self.current_session.end_time:
                 self.terminate_session()
@@ -121,56 +130,48 @@ class CartSearchEngine:
         """Main search pipeline executor"""
         ## 1. Query logging
         query_log = self._create_query_log(raw_query)
-        print(f"# Session Queries: {len(self.current_session.queries)}")
+        print(f"\nQuery log {query_log.id} added at {query_log.timestamp}")
+        print(f"# Queries in Session: {len(self.current_session.queries)}")
 
         ## 2. Query pre-processing
         refined_query = self._preprocess_query(query_log, self.current_user)
-        print(f"Refined search query: {query_log.refined_query}")
+        # print(f"Refined search query: {query_log.refined_query}")
 
         ## 3. Embedding generation
         query_embedding = self._generate_query_embeddings(query_log)
-        # print(f"Query Embedding: {query_log.embedding}")
+        # print(f"Query Vector: {query_log.embedding}")
 
-        ## 4. Session context processing
-        # print(f"User Embedding: {self.current_user.embedding}")
-        context_vector = [] #self._build_session_context()
-        # print(f"Context Embedding: {context_vector}")
+        ## 4. Session context processing (Session + User)
+        context_vector = self._build_session_context(alpha=self.context_alpha)
+        # print(f"Context Vector: {context_vector}")
 
-        ## 5. Context-Aware embedding generation (user + session graph embeddings)
-        fused_context_vector = self._get_unified_context_vector(query_log.embedding, )
-
-        ## 6. Unified Context Embedding (context_vector + query embeddings)
-        unified_vector = self._get_unified_context_vector(
-            refined_query=query_log.refined_query,
-            query_vector=query_log.embedding,
-            context_vector=fused_context_vector,  # From _build_session_context()
-            alpha=0.6
-        )
-        print(unified_vector)
+        ## 5. Unified Context Embedding (context + query embeddings)
+        unified_vector = self._generate_unified_embedding(query_embedding, context_vector, alpha=self.context_fusion_beta)
+        # print(f"Unified Context Vector: {unified_vector}")
 
         ## 6. Dual retrieval
-        # bm25_results, vector_results = self._retrieve_results(
-        #     refined_query, query_embedding
-        # )
+        bm25_results, vector_results = self._retrieve_results(refined_query, unified_vector)
 
         ## 7. Result fusion
-
+        fused_results = self._fuse_search_results(bm25_results, vector_results, beta=self.retrieval_fusion_beta, top_n=self.search_K)
 
         ## 8. Final logging
-        
-        return []
+        self._display_and_log_results(query_log, bm25_results, vector_results, fused_results, self.product_lookup)
+
+        # return bm25_results, vector_results, fused_results
 
     def _initialize_search_components(self):
         """One-time initialization of search resources"""
         if not hasattr(self, '_search_initialized'):
             self.products = Product.load_all()
+            self.product_lookup = {product.id: product for product in self.products}
             self.search_engine = ProductSearchEngine(
                 embedding_dim=1536,
                 index_path="products.ann",
                 products=self.products
             )            
             self.embedding_service = EmbeddingService()
-            self.retriever = BM25CandidateRetriever(self.products)
+            self.bm25_retriever = BM25CandidateRetriever(self.products)
             self._search_initialized = True
     
     def _create_query_log(self, raw_query, query=None):
@@ -198,10 +199,11 @@ class CartSearchEngine:
             prompt_builder=PromptBuilder(),
             openai_client=OpenAIClient()
         )
-        refined = preprocessor.preprocess(query_log, user)
-        query_log.update_refined_query(refined["normalized_query"])
+        refined_query = preprocessor.preprocess(query_log, user)
+        normalized_query = refined_query.get("normalized_query")
+        query_log.update_refined_query(normalized_query)
         
-        return refined
+        return normalized_query
     
     def _generate_query_embeddings(self, query_log):
         """Generate and log query embeddings with validation"""
@@ -235,88 +237,93 @@ class CartSearchEngine:
                 print(f"Problematic embedding: {embedding[:3]}...")  # First 3 elements
             return []
 
-    def _build_session_context(self):
-        """Build session-aware context vector"""
+    def _build_session_context(self, alpha=0.5):
+        """Build session-aware context vector using session graph and user embeddings."""
         try:
-            # Get session graph embedding
-            session_embedding = self._get_session_graph_embedding() or []
+            # Generate session graph embeddings
+            session_embedder = SessionGraphEmbedder()
+            session_vectors = session_embedder.embed_session_graphs([self.current_session])
+            # print("Session Embedding:", session_vectors)  # Expected: dict -> {user_id: array([...], dtype=float32)}
             
-            # Get user profile embedding
-            user_embedding = self.current_user.embedding or []
+            # Convert user's embedding list to a NumPy array with dtype=float32
+            user_vectors = {self.current_user.id: np.array(self.current_user.embedding, dtype=np.float32)}
+            # print("User Embedding:", user_vectors)
             
-            # Fuse session and user context
-            return session_embedding
-            # return self._fuse_context_vectors(session_embedding, user_embedding)
-            
+            uid = self.current_user.id
+            # If first query submission (no session context), use only user embedding.
+            if uid not in session_vectors or len(session_vectors[uid]) == 0:
+                print("No session context available, using only user context.")
+                return { uid: user_vectors.get(uid, []) } # return user_vectors.get(uid, [])
+            else:
+                # Align dimensions of session and user vectors for current user
+                s_vec = session_vectors[uid]
+                u_vec = user_vectors[uid]
+                common_dim = min(s_vec.shape[0], u_vec.shape[0])
+                s_vec_aligned = s_vec[:common_dim]
+                u_vec_aligned = u_vec[:common_dim]
+                session_vectors[uid] = s_vec_aligned
+                user_vectors[uid] = u_vec_aligned
+                
+                # Fuse session and user embeddings
+                fuser = ContextFusion(alpha)
+                context_vectors = fuser.fuse(session_vectors, user_vectors)
+                # print("Fused Context Embedding:", context_vectors)
+                
+                return context_vectors.get(uid, [])
         except Exception as e:
-            print(f"Context processing failed: {str(e)}")
+            print(f"Failed to build session context: {e}")
             return []
         
-    def _get_session_graph_embedding(self):
-        """Generate session graph embedding with proper error handling"""
-        try:
-            if len(self.current_session.queries) <= 1:
-                return None  # Use None instead of empty list for clarity
-                
-            # 1. Build graph(s) - match original pattern's input type
-            graph_builder = SessionGraphBuilder()
-            session_graphs = graph_builder.build_graph([self.current_session])  # List input
-            
-            # 2. Embed graphs - add empty result handling
-            embedder = SessionGraphEmbedder()
-            embeddings = embedder.embed_session_graphs([self.current_session]) #session_graphs
-            
-            # 3. Validate and return
-            if embeddings and len(embeddings) > 0:
-                return embeddings[0]  # Return first embedding
-            return None
-            
-        except Exception as e:
-            print(f"Session graph embedding failed: {str(e)}")
-            return None
+    def _generate_unified_embedding(self, query_embedding, context_embedding, alpha=0.6):
+        """Generate unified embedding using  context and query vectors."""
+        # Wrap context_embedding in a dictionary if it's not one already
+        if not isinstance(context_embedding, dict):
+            context_embedding = {self.current_user.id: context_embedding}
 
-    def _fuse_context_vectors(self, session_embedding, user_embedding, alpha=0.4):
-        """Combine session and user context"""
-        user_id = self.current_user.id
-        session_dict = {user_id: session_embedding} if session_embedding else {}
-        user_dict = {user_id: user_embedding} if user_embedding else {}
-        
-        fuser = ContextFusion(alpha=alpha)
-        fused = fuser.fuse(session_dict, user_dict)
-        return fused.get(user_id) or []
-        
-    def _get_unified_context_vector(self, refined_query: str, query_vector: list, context_vector: list, alpha: float = 0.6) -> list:
-        """Generate and store unified context-aware embedding"""
-        if context_vector == []:
-            print("No context available, using pure query embedding")
-            return query_vector
-        
-        try:
-            fused_vector = fuse_vectors(
-                query_vector=query_vector,
-                context_vector=context_vector,
-                alpha=alpha
-            )
-            
-            # Create and store unified embedding
-            UnifiedEmbedding.create(
-                user_id=self.current_user.id,
-                session_id=self.current_session.id,
-                query=refined_query,
-                embedding=fused_vector
-            )  
-            return fused_vector
-            
-        except Exception as e:
-            print(f"Context fusion failed: {str(e)}")
-            return query_vector  # Fallback to original query embedding
+        unified_embedding = fuse_vectors(alpha, self.current_user.id, query_embedding, context_embedding)
+
+        return unified_embedding
     
-    def _retrieve_results(self, refined_query, query_embedding):
+    def _retrieve_results(self, refined_query, unfied_embedding=None):
         """Execute dual retrieval strategies"""
-        bm25 = self.retriever.retrieve(refined_query)
-        vector = self.search_engine.search(query_embedding, k=5)
+        bm25 = self.bm25_retriever.retrieve(refined_query, self.search_K)
+        vector = [] #self.search_engine.search(unfied_embedding, self.search_K)
         return bm25, vector
     
+    def _fuse_search_results(self, bm25_results, vector_results, beta=0.5, top_n=5):
+        """Fuse BM25 and vector results"""
+        if len(bm25_results) == 0 and len(vector_results) == 0:
+            raise ValueError("Neither BM25 nor Vector results are available.")
+        elif len(bm25_results) == 0:
+            return vector_results
+        elif len(vector_results) == 0:
+            return bm25_results
+        else:
+            return fuse_candidates(bm25_results, vector_results, beta, top_n)
+    
+    def _display_and_log_results(self, query_log, bm25_results, vector_results, fused, product_mapping=None):
+        """Display and log search results into query log"""
+        bm25_products = [
+            product_mapping.get(pid["product_id"] if isinstance(pid, dict) else pid, "Unknown Title").title
+            for pid in bm25_results
+        ]
+        vector_products = [
+            product_mapping.get(pid["product_id"] if isinstance(pid, dict) else pid, "Unknown Title").title
+            for pid in vector_results
+        ]
+        final_products = [
+            product_mapping.get(pid["product_id"] if isinstance(pid, dict) else pid, "Unknown Title").title
+            for pid in fused
+        ]
+
+        # Print final products
+        print("\nSearch Results:")
+        for i, product in enumerate(final_products):
+            print(f"{i+1}. {product}")
+
+        # Update query log with titles
+        query_log.update_results(bm25_products,vector_products, final_products)
+
 if __name__ == "__main__":
     # U78644
     app = CartSearchEngine()
