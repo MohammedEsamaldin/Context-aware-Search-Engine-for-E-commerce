@@ -84,21 +84,20 @@ class BM25CandidateRetriever:
         """
         self.bm25 = BM25Okapi(self.documents)
 
-    def retrieve(self, refined_query: str) -> List[Dict[str, object]]:
+    def retrieve(self, refined_query: str, top_k=5) -> List[Dict[str, object]]:
         """
-        Retrieve the top 5 most relevant products based on BM25 scores.
+        Retrieve the top k most relevant products based on BM25 scores.
 
         Args:
             refined_query (str): The cleaned query string (from QueryLog.refined_query).
 
         Returns:
-            List[Dict[str, object]]: A list of top-5 matches, each a dictionary with:
+            List[Dict[str, object]]: A list of top-k matches, each a dictionary with:
                 - "product": Product object
                 - "score": BM25 relevance score as float
         """
         query_tokens = refined_query.split()
         scores = self.bm25.get_scores(query_tokens)
-        top_k = 5
         top_indices = scores.argsort()[::-1][:top_k]
 
         results = []
