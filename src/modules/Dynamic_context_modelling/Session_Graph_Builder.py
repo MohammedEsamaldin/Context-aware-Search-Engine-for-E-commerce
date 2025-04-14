@@ -69,10 +69,11 @@ class ContextEmbedder:
             fused_vec = self.alpha * session_vec + (1 - self.alpha) * profile_vec
             return fused_vec
         else:
-            return {
-                "session": session_vec,
-                "profile": profile_vec
-            }
+            return []
+            # return {
+            #     "session": session_vec,
+            #     "profile": profile_vec
+            # }
 
 class SessionGraphBuilder:
     def __init__(self, lambda_recency=0.05):
