@@ -40,9 +40,9 @@ class CartSearchEngine:
         self.current_user = None
         self.current_session = None
         self.search_components = None
-        self.context_alpha = 0.7            
+        self.context_alpha = 0.65            
         self.context_fusion_beta = 0.8      
-        self.search_K = 5                  
+        self.search_K = 10                  
         self.retrieval_fusion_beta = 0.5
     
     def run(self):
@@ -138,15 +138,15 @@ class CartSearchEngine:
 
         ## 3. Embedding generation
         query_embedding = self._generate_query_embeddings(query_log)
-        print(f"Query Vector: {query_log.embedding}")
+        # print(f"Query Vector: {query_log.embedding}")
 
         ## 4. Session context processing (Session + User)
         context_vector = self._build_session_context(alpha=self.context_alpha)
-        print(f"Context Vector: {context_vector}")
+        # print(f"Context Vector: {context_vector}")
 
         ## 5. Unified Context Embedding (context + query embeddings)
         unified_vector = self._generate_unified_embedding(query_embedding, context_vector, alpha=self.context_fusion_beta)
-        print(f"Unified Context Vector: {unified_vector}")
+        # print(f"Unified Context Vector: {unified_vector}")
 
         ## 6. Dual retrieval
         bm25_results, vector_results = self._retrieve_results(refined_query, unified_vector)
@@ -322,6 +322,6 @@ class CartSearchEngine:
         query_log.update_results(bm25_products,vector_products, final_products)
 
 if __name__ == "__main__":
-    # U78644
+    # E.g., U78644, U88542, U78644
     app = CartSearchEngine()
     app.run()
