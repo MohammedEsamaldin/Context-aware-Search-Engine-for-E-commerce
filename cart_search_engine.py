@@ -242,9 +242,9 @@ class CartSearchEngine:
             uid = self.current_user.id
             user_pro = self.current_user[0]  
             embedding_service = EmbeddingService()
-            context_embedder = ContextEmbedder(embedding_service=embedding_service, alpha=0.5)
-            graph_builder = SessionGraphBuilder()
-            session_graphs = graph_builder.build_graph([self.current_session])
+            context_embedder = ContextEmbedder(embedding_service=embedding_service, alpha=self.context_alpha)
+            # graph_builder = SessionGraphBuilder()
+            # session_graphs = graph_builder.build_graph([self.current_session])
 
             # Unified embedding (fused session + profile vector for one user)
             context_vectors = context_embedder.embed_single_user_and_session(
@@ -252,7 +252,9 @@ class CartSearchEngine:
                 session=self.current_session,
                 fuse=True
             )
-
+            print(context_vectors)
+            return context_vectors.get(uid)
+        
             # # Generate session graph embeddings
             # session_embedder = SessionGraphEmbedder()
             # session_vectors = session_embedder.embed_session_graphs([self.current_session])
@@ -284,8 +286,7 @@ class CartSearchEngine:
                 
             #     return context_vectors.get(uid, [])
 
-
-            return context_vectors.get(uid, []) #what does this like of code do?
+            # return context_vectors.get(uid, []) #what does this like of code do?
         except Exception as e:
             print(f"Failed to build session context: {e}")
             return []
@@ -295,10 +296,8 @@ class CartSearchEngine:
         # Wrap context_embedding in a dictionary if it's not one already
         if not isinstance(context_embedding, dict):
             context_embedding = {self.current_user.id: context_embedding}
-            fuser = VectorFuser(alpha=0.6)
-            unified_embedding = fuser(query_embedding, context_embedding)
-            
-
+            fuser = VectorFuser(alpha=self.context_fusion_beta)
+            unified_embedding = fuser(query_embedding, context_embedding)            
         # unified_embedding = fuse_vectors(alpha, self.current_user.id, query_embedding, context_embedding)
 
         return unified_embedding
