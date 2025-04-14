@@ -8,7 +8,8 @@ class PromptBuilder:
         interests = user_profile.preferences.interests
 
         return (
-            f"Rewrite this search query with correct spelling and more details: '{query}'. "
-            f"Include relevant terms based on user's favorite brands: {', '.join(brands)}; "
-            f"user interests: {', '.join(interests)}; "
+            f"Improve and correct the search query: '{query}'. "
+            f"Only include related terms if they are clearly connected to the original query. "
+            f"User preferences: favorite brands - {', '.join(brands)}; interests - {', '.join(interests)}. "
+            f"Do not include unrelated preferences. Keep the rewritten query natural and relevant."
         )

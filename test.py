@@ -16,10 +16,10 @@ from src.services.embedding_service import EmbeddingService
 from src.services.openai_client import OpenAIClient
 from src.modules.preprocessor.preprocessor import QueryPreprocessor
 from src.modules.preprocessor.prompt_builder import PromptBuilder
-from src.modules.Dynamic_context_modelling.Session_Graph_Builder \
+from src.modules.dynamic_context_modelling.Session_Graph_Builder \
     import ContextEmbedder #SessionGraphEmbedder, SessionGraphBuilder, ContextFusion,
 # from src.modules.Dynamic_context_modelling.fusion import fuse_vectors
-from src.modules.Dynamic_context_modelling.fusion import VectorFuser
+from src.modules.dynamic_context_modelling.fusion import VectorFuser
 
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
 from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine

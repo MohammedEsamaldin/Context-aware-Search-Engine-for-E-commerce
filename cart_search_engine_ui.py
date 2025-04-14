@@ -1,6 +1,7 @@
 import gradio as gr
 
 from cart_search_engine import CartSearchEngine
+from src.utils.ui_helper import category_icon
 
 
 class CartSearchEngineUI(CartSearchEngine):
@@ -44,38 +45,41 @@ class CartSearchEngineUI(CartSearchEngine):
 
             # Search logic
             def handle_search(query, user_id):
-                if not self.verify_user(user_id):
-                    return "<div style='color:red; font-weight: bold;'>❌ Session error. Please log in again.</div>"
+                if not user_id or not query:
+                    return "<div style='color:red;'>⚠️ Please enter both User ID and Search Query.</div>"
 
-                results = self._run_ui_search(query)
+                if not app.verify_user(user_id):
+                    return "<div style='color:red;'>❌ Invalid User ID. Please try again.</div>"
 
-                # Styled cards with product titles
-                cards = """
-                <div style='
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                    padding: 10px 0;
-                    font-family: Arial, sans-serif;
-                '>
+                results = app._run_ui_search(query)
+
+                if not results:
+                    return "<div style='color:gray;'>😕 No results found.</div>"
+
+                html = """
+                <h3 style="margin-top: 10px; color:#4F46E5; font-size:18px;">🔎 Top Matches Found</h3>
+                <div style='display:flex; flex-direction:column; gap:12px; padding-top:10px; font-family:Arial,sans-serif;'>
                 """
 
-                for i, title in enumerate(results, 1):
-                    cards += f"""
-                    <div style='
-                        background-color: #ffffff;
-                        border: 1px solid #e2e2e2;
+                for i, title in enumerate(results[:5], 1):
+                    icon = category_icon(title)
+                    html += f"""
+                    <div style="
+                        background: #ffffff;
                         border-left: 5px solid #4F46E5;
-                        border-radius: 8px;
-                        padding: 12px 16px;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-                    '>
-                        <div style='font-weight: 600; font-size: 16px; margin-bottom: 5px; color: #333;'>🔹 {i}. {title}</div>
+                        border-radius: 10px;
+                        padding: 14px 18px;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+                        transition: transform 0.2s ease;
+                    " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="font-size: 15.5px;">
+                            {icon} <strong>{i}. {title}</strong>
+                        </div>
                     </div>
                     """
 
-                cards += "</div>"
-                return cards
+                html += "</div>"
+                return html
 
             search_btn.click(
                 fn=handle_search,
