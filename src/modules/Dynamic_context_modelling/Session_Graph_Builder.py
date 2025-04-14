@@ -1,12 +1,12 @@
 # import numpy as np
 # import math
 # from sentence_transformers import SentenceTransformer
-
-
-
-from src.services.embedding_service import EmbeddingService
+# filepath: your_entry_file.py
+import warnings
 import numpy as np
 import math
+
+
 class ContextEmbedder:
     def __init__(self, embedding_service, alpha=0.5):
         self.embedding_service = embedding_service
@@ -60,7 +60,10 @@ class ContextEmbedder:
                 total_weight += weight
 
         if not weighted_embeddings:
-            return None  # nothing to embed
+            #return None  # nothing to embed
+            ## Return user profile embedding
+            warnings.warn(f"No transitions found for user {user.id}. Using profile vector only.")
+            return profile_vec
 
         session_vec = np.sum(weighted_embeddings, axis=0) / total_weight
 
@@ -108,6 +111,8 @@ class SessionGraphBuilder:
         return self.session_graphs
 
 
+
+## ==== ARCHIVE ==== ##
 # class SessionGraphBuilder:
 #     def __init__(self, lambda_recency=0.05):
 #         self.lambda_recency = lambda_recency
