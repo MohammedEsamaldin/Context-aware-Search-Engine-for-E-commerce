@@ -129,23 +129,24 @@ print("Unified Embedding:", fused_vector)
 ## === START: Dual Retrieval ===
 K = 3  # Number of top results to retrieve
 # ## = BM25
-# bm25_results = bm25_retriever.retrieve(query_log.refined_query, K)  ## {product_id: score}
-# print(f"\nBM25 Results: {bm25_results}")
+bm25_results = bm25_retriever.retrieve(query_log.refined_query, K)  ## {product_id: score}
+print(f"\nBM25 Results: {bm25_results}")
 
 # ## = Vector
-vector_results = search_engine.search(query_log.embedding, K)  ## {product_id: score}
-print
+vector_results = search_engine.search(fused_vector, K)  ## {product_id: score}
+print(f"\nVector Results: {vector_results}")
 # ## === END: Dual Retrieval ===
 
 # ## === Result Fusion
-# if len(bm25_results) == 0 and len(vector_results) == 0:
-#     raise ValueError("Neither BM25 nor Vector results are available.")
-# elif len(bm25_results) == 0:
-#     fused_result = vector_results
-# elif len(vector_results) == 0:
-#     fused_result = bm25_results
-# else:
-#     fused_result = fuse_candidates(bm25_results, vector_results, beta=0.5, top_n=5)
+if len(bm25_results) == 0 and len(vector_results) == 0:
+    raise ValueError("Neither BM25 nor Vector results are available.")
+elif len(bm25_results) == 0:
+    fused_result = vector_results
+elif len(vector_results) == 0:
+    fused_result = bm25_results
+else:
+    fused_result = fuse_candidates(bm25_results, vector_results, beta=0.5, top_n=5)
+print(f"\nFused Results: {fused_result}")
 
 # ## === Final logging
 # # Save list of product titles to update to query log later

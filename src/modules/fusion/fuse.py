@@ -8,8 +8,8 @@ def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
     Merges BM25 and vector retrieval candidate lists in a single list using a weighted sum.
 
     Params:
-    - bm25_candidates (list): List of dicts, containing keys "productId" and "score" for BM25 candidates.
-    - vector_candidates (list): List of dicts, containing keys "productId" and "score" for vector candidates.
+    - bm25_candidates (list): List of dicts, containing keys "product_id" and "score" for BM25 candidates.
+    - vector_candidates (list): List of dicts, containing keys "product_id" and "score" for vector candidates.
     - beta (float): Weight (0 <= beta <= 1) to balance BM25 and vector scores.
     - top_n (int): if provided, return only the top N candidates.
 
@@ -61,7 +61,7 @@ def fuse_candidates(bm25_candidates, vector_candidates, beta=0.5, top_n=None):
         }
 
     for cand in vector_candidates:
-        pid = cand["productId"]
+        pid = cand["product_id"]
         if pid in merged:
             merged[pid]["norm_Vector"] = cand.get("norm_Vector", 0.0)
         else:
