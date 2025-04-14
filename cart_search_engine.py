@@ -17,9 +17,8 @@ from src.services.embedding_service import EmbeddingService
 from src.services.openai_client import OpenAIClient
 from src.modules.preprocessor.preprocessor import QueryPreprocessor
 from src.modules.preprocessor.prompt_builder import PromptBuilder
-from src.modules.Dynamic_context_modelling.Session_Graph_Builder \
-    import SessionGraphEmbedder, ContextFusion #, SessionGraphBuilder
-from src.modules.Dynamic_context_modelling.fusion import fuse_vectors
+from src.modules.Dynamic_context_modelling.Session_Graph_Builder import ContextEmbedder ,SessionGraphBuilder
+from src.modules.Dynamic_context_modelling.fusion import VectorFuser
 
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
 from src.modules.retrieval.vector_retrieval_model import ProductSearchEngine
@@ -240,36 +239,53 @@ class CartSearchEngine:
     def _build_session_context(self, alpha=0.5):
         """Build session-aware context vector using session graph and user embeddings."""
         try:
-            # Generate session graph embeddings
-            session_embedder = SessionGraphEmbedder()
-            session_vectors = session_embedder.embed_session_graphs([self.current_session])
-            # print("Session Embedding:", session_vectors)  # Expected: dict -> {user_id: array([...], dtype=float32)}
-            
-            # Convert user's embedding list to a NumPy array with dtype=float32
-            user_vectors = {self.current_user.id: np.array(self.current_user.embedding, dtype=np.float32)}
-            # print("User Embedding:", user_vectors)
-            
             uid = self.current_user.id
-            # If first query submission (no session context), use only user embedding.
-            if uid not in session_vectors or len(session_vectors[uid]) == 0:
-                print("No session context available, using only user context.")
-                return { uid: user_vectors.get(uid, []) } # return user_vectors.get(uid, [])
-            else:
-                # Align dimensions of session and user vectors for current user
-                s_vec = session_vectors[uid]
-                u_vec = user_vectors[uid]
-                common_dim = min(s_vec.shape[0], u_vec.shape[0])
-                s_vec_aligned = s_vec[:common_dim]
-                u_vec_aligned = u_vec[:common_dim]
-                session_vectors[uid] = s_vec_aligned
-                user_vectors[uid] = u_vec_aligned
+            user_pro = self.current_user[0]  
+            embedding_service = EmbeddingService()
+            context_embedder = ContextEmbedder(embedding_service=embedding_service, alpha=0.5)
+            graph_builder = SessionGraphBuilder()
+            session_graphs = graph_builder.build_graph([self.current_session])
+
+            # Unified embedding (fused session + profile vector for one user)
+            context_vectors = context_embedder.embed_single_user_and_session(
+                user=user_pro,
+                session=self.current_session,
+                fuse=True
+            )
+
+            # # Generate session graph embeddings
+            # session_embedder = SessionGraphEmbedder()
+            # session_vectors = session_embedder.embed_session_graphs([self.current_session])
+            # # print("Session Embedding:", session_vectors)  # Expected: dict -> {user_id: array([...], dtype=float32)}
+            
+            # # Convert user's embedding list to a NumPy array with dtype=float32
+            # user_vectors = {self.current_user.id: np.array(self.current_user.embedding, dtype=np.float32)}
+            # # print("User Embedding:", user_vectors)
+            
+            # 
+            # # If first query submission (no session context), use only user embedding.
+            # if uid not in session_vectors or len(session_vectors[uid]) == 0:
+            #     print("No session context available, using only user context.")
+            #     return { uid: user_vectors.get(uid, []) } # return user_vectors.get(uid, [])
+            # else:
+            #     # Align dimensions of session and user vectors for current user
+            #     s_vec = session_vectors[uid]
+            #     u_vec = user_vectors[uid]
+            #     common_dim = min(s_vec.shape[0], u_vec.shape[0])
+            #     s_vec_aligned = s_vec[:common_dim]
+            #     u_vec_aligned = u_vec[:common_dim]
+            #     session_vectors[uid] = s_vec_aligned
+            #     user_vectors[uid] = u_vec_aligned
                 
-                # Fuse session and user embeddings
-                fuser = ContextFusion(alpha)
-                context_vectors = fuser.fuse(session_vectors, user_vectors)
-                # print("Fused Context Embedding:", context_vectors)
+            #     # Fuse session and user embeddings
+            #     fuser = ContextFusion(alpha)
+            #     context_vectors = fuser.fuse(session_vectors, user_vectors)
+            #     # print("Fused Context Embedding:", context_vectors)
                 
-                return context_vectors.get(uid, [])
+            #     return context_vectors.get(uid, [])
+
+
+            return context_vectors.get(uid, []) #what does this like of code do?
         except Exception as e:
             print(f"Failed to build session context: {e}")
             return []
@@ -279,7 +295,12 @@ class CartSearchEngine:
         # Wrap context_embedding in a dictionary if it's not one already
         if not isinstance(context_embedding, dict):
             context_embedding = {self.current_user.id: context_embedding}
-        unified_embedding = fuse_vectors(alpha, self.current_user.id, query_embedding, context_embedding)
+            fuser = VectorFuser(alpha=0.6)
+            unified_embedding = fuser(query_embedding, context_embedding)
+            
+
+        # unified_embedding = fuse_vectors(alpha, self.current_user.id, query_embedding, context_embedding)
+
         return unified_embedding
     
     def _retrieve_results(self, refined_query, unified_embedding=None):
