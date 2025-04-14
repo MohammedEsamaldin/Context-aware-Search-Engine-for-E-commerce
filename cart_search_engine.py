@@ -322,6 +322,6 @@ class CartSearchEngine:
         query_log.update_results(bm25_products,vector_products, final_products)
 
 if __name__ == "__main__":
-    # E.g., U78644, U88542, U78644
+    # E.g., U78644, U88542, U78644, U91979, U69670, U45178
     app = CartSearchEngine()
     app.run()

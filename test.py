@@ -27,6 +27,28 @@ from src.modules.fusion.fuse import fuse_candidates
 
 print("*"*30, "TESTING", "*"*30)
 
+## Create new users
+user_1 = UserProfile.create_with_generated_id(
+    name="Mary Jane",
+    email="mary.jane@gmail.com",
+    favorite_brands=["Nike", "Adidas", "Sephora", "Apple", "KitchenAid", "Lululemon", "Canon", "Bose"],
+    interests=["fashion", "photography", "cooking and baking", "fitness", "household", "music", "beauty"], 
+)
+user_2 = UserProfile.create_with_generated_id(
+    name="Peter Parker",
+    email="peter.parker@hotmail.com",
+    favorite_brands=["Puma", "Reebok", "Sony", "Samsung", "LG", "GoPro", "ASUS"],
+    interests=["sports", "gaming", "technology", "fitness", "esports", "gadgets", "hobby", "toys"],
+)
+user_3 = UserProfile.create_with_generated_id(
+    name="Bruce Wayne",
+    email="batman@gmail.com",
+    favorite_brands=["The North Face", "Patagonia", "Dyson", "LEGO", "AmazonBasics", "Sony", "Microsoft"], 
+    interests=["outdoors", "gaming", "books", "technology", "automotive", "tools and hardware", "electronics"],
+)
+print(f"User 1: {user_1.id} - {user_1.name}")
+print(f"User 2: {user_2.id} - {user_2.name}")
+print(f"User 3: {user_3.id} - {user_3.name}")
 # products = Product.load_all()
 # product_lookup = {prod.id: prod.title for prod in products}
 
@@ -35,20 +57,9 @@ print("*"*30, "TESTING", "*"*30)
 #     index_path="products.ann",
 #     products=products
 # )            
-embedding_service = EmbeddingService()
+# embedding_service = EmbeddingService()
 
-# bm25_retriever = BM25CandidateRetriever(products)
-
-## Test embedding service embed_single_user_and_session
-user_id = 'U78644'
-session_id = 'ScFPGizvQ0L5M2rTFLMn'
-session = Session.load(session_id)
-user = UserProfile.get(user_id)
-
-embedding_service = EmbeddingService()
-context_embedder = ContextEmbedder(embedding_service, alpha=0.5)
-fused_vector = context_embedder.embed_single_user_and_session(user, session, fuse=True)
-print(f"Fused vector for user {user_id} and session {session_id}: {fused_vector}")
+# # bm25_retriever = BM25CandidateRetriever(products)
 
 # ## Get Session ID
 # session_id = 'r9vm7zllqMbyTzadgRAP' #input("Enter existing session ID: ").strip()
