@@ -45,3 +45,4 @@ pytest-cov>=4.1.0         # Coverage reporting (optional)
 ##========================
 # google-cloud-firestore>=2.11.0  # Explicit Firestore client
 # requests>=2.31.0                # HTTP client
+gradio~=5.25.0
