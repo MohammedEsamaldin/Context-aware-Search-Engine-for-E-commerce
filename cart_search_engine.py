@@ -11,14 +11,14 @@ from src.models.user import UserProfile
 from src.models.session import Session
 from src.models.product import Product
 from src.models.query_log import QueryLog
-from src.models.unified_embedding import UnifiedEmbedding
+# from src.models.unified_embedding import UnifiedEmbedding
 
 from src.services.embedding_service import EmbeddingService
 from src.services.openai_client import OpenAIClient
 from src.modules.preprocessor.preprocessor import QueryPreprocessor
 from src.modules.preprocessor.prompt_builder import PromptBuilder
 from src.modules.Dynamic_context_modelling.Session_Graph_Builder \
-    import SessionGraphEmbedder, SessionGraphBuilder, ContextFusion
+    import SessionGraphEmbedder, ContextFusion #, SessionGraphBuilder
 from src.modules.Dynamic_context_modelling.fusion import fuse_vectors
 
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
@@ -43,7 +43,7 @@ class CartSearchEngine:
         self.search_components = None
         self.context_alpha = 0.7            
         self.context_fusion_beta = 0.8      
-        self.search_K = 10                  
+        self.search_K = 5                  
         self.retrieval_fusion_beta = 0.5
     
     def run(self):
@@ -135,19 +135,19 @@ class CartSearchEngine:
 
         ## 2. Query pre-processing
         refined_query = self._preprocess_query(query_log, self.current_user)
-        # print(f"Refined search query: {query_log.refined_query}")
+        print(f"Refined search query: {query_log.refined_query}")
 
         ## 3. Embedding generation
         query_embedding = self._generate_query_embeddings(query_log)
-        # print(f"Query Vector: {query_log.embedding}")
+        print(f"Query Vector: {query_log.embedding}")
 
         ## 4. Session context processing (Session + User)
         context_vector = self._build_session_context(alpha=self.context_alpha)
-        # print(f"Context Vector: {context_vector}")
+        print(f"Context Vector: {context_vector}")
 
         ## 5. Unified Context Embedding (context + query embeddings)
         unified_vector = self._generate_unified_embedding(query_embedding, context_vector, alpha=self.context_fusion_beta)
-        # print(f"Unified Context Vector: {unified_vector}")
+        print(f"Unified Context Vector: {unified_vector}")
 
         ## 6. Dual retrieval
         bm25_results, vector_results = self._retrieve_results(refined_query, unified_vector)
@@ -279,15 +279,13 @@ class CartSearchEngine:
         # Wrap context_embedding in a dictionary if it's not one already
         if not isinstance(context_embedding, dict):
             context_embedding = {self.current_user.id: context_embedding}
-
         unified_embedding = fuse_vectors(alpha, self.current_user.id, query_embedding, context_embedding)
-
         return unified_embedding
     
-    def _retrieve_results(self, refined_query, unfied_embedding=None):
+    def _retrieve_results(self, refined_query, unified_embedding=None):
         """Execute dual retrieval strategies"""
         bm25 = self.bm25_retriever.retrieve(refined_query, self.search_K)
-        vector = [] #self.search_engine.search(unfied_embedding, self.search_K)
+        vector = self.search_engine.search(unified_embedding, self.search_K)
         return bm25, vector
     
     def _fuse_search_results(self, bm25_results, vector_results, beta=0.5, top_n=5):
