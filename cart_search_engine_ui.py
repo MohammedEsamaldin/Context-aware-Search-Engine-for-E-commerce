@@ -1,7 +1,8 @@
 import gradio as gr
 
 from cart_search_engine import CartSearchEngine
-from src.utils.ui_helper import category_icon
+from src.models import UserProfile
+
 
 
 class CartSearchEngineUI(CartSearchEngine):
@@ -51,18 +52,53 @@ class CartSearchEngineUI(CartSearchEngine):
                 if not app.verify_user(user_id):
                     return "<div style='color:red;'>❌ Invalid User ID. Please try again.</div>"
 
+                # Run the search pipeline
                 results = app._run_ui_search(query)
 
                 if not results:
                     return "<div style='color:gray;'>😕 No results found.</div>"
 
+                # Get user preferences (replace with your real preference loader)
+                user_preferences = app.get_user_preferences(UserProfile.get(user_id))  # <-- This should return a dict like:
+
+                import re
+
+                def highlight_match(text, prefs):
+                    def apply_highlight(input_text, patterns, style):
+                        for word in patterns:
+                            regex = re.compile(rf'\b({re.escape(word)})\b', re.IGNORECASE)
+                            input_text = regex.sub(
+                                lambda match: f"<span style='{style}'>{match.group(1)}</span>",
+                                input_text
+                            )
+                        return input_text
+
+                    text = apply_highlight(
+                        text,
+                        prefs.get("favorite_brands", []),
+                        "background:#FDE68A; padding:2px 6px; border-radius:6px;"
+                    )
+                    text = apply_highlight(
+                        text,
+                        prefs.get("favorite_colors", []),
+                        "background:#E0F2FE; padding:2px 6px; border-radius:6px; color:#0369A1;"
+                    )
+                    text = apply_highlight(
+                        text,
+                        prefs.get("favorite_categories", []),
+                        "background:#DCFCE7; padding:2px 6px; border-radius:6px; color:#15803D;"
+                    )
+
+                    return text
+
+                # HTML layout
                 html = """
                 <h3 style="margin-top: 10px; color:#4F46E5; font-size:18px;">🔎 Top Matches Found</h3>
                 <div style='display:flex; flex-direction:column; gap:12px; padding-top:10px; font-family:Arial,sans-serif;'>
                 """
 
                 for i, title in enumerate(results[:5], 1):
-                    icon = category_icon(title)
+                    highlighted_title = highlight_match(title, user_preferences)
                     html += f"""
                     <div style="
                         background: #ffffff;
@@ -73,7 +109,7 @@ class CartSearchEngineUI(CartSearchEngine):
                         transition: transform 0.2s ease;
                     " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                         <div style="font-size: 15.5px;">
-                            {icon} <strong>{i}. {title}</strong>
+                             <strong>{i}. {highlighted_title}</strong>
                         </div>
                     </div>
                     """
@@ -100,6 +136,15 @@ class CartSearchEngineUI(CartSearchEngine):
             )
 
         demo.launch()
+
+    def get_user_preferences(self, user: UserProfile):
+        # Mock preferences – replace with your real logic (e.g., DB or session object)
+        print(user.preferences.favorite_brands)
+        return {
+            "favorite_brands": user.preferences.favorite_brands,
+            "favorite_colors": ["pink", "grey", "dusty rose"],
+            "favorite_categories": user.preferences.interests
+        }
 
     def _display_and_log_results(self, query_log, bm25_results, vector_results, fused, product_mapping=None):
         """Display and log search results into query log"""
