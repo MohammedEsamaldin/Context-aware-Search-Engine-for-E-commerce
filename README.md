@@ -1,6 +1,71 @@
 # Context-aware-Search-Engine-for-E-commerce
 
+
 Search engine for e-commerce product search that better captures user intent.
+
+
+## 📦 Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/context-aware-search-engine.git
+cd context-aware-search-engine
+```
+
+2. **Create and activate virtual environment**
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🔑 Setup OpenAI API
+
+1. Create a `.env` file in the root of the project and add your OpenAI key:
+
+```env
+OPENAI_API_KEY=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```
+```
+---
+
+## 🖥️ Run the App
+
+```bash
+python cart_search_engine_ui.py
+```
+
+Then open your browser and go to:  
+👉 [http://127.0.0.1:7860](http://127.0.0.1:7860)
+
+---
+Test Users:
+```
+U78644, U88542, U78644, U91979, U69670, U45178
+```
+
+Test Query:
+```
+blutus hedphone
+```
+
+---
+
+## 🧪 Optional: Test Without UI
+
+You can run a standalone test script:
+
+```bash
+python cart_search_engine.py
+```
+
+---
+
 
 ### 1. Literature Review
 
