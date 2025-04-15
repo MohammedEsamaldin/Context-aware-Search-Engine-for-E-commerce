@@ -3,7 +3,7 @@ import gradio as gr
 from cart_search_engine import CartSearchEngine
 from src.models import UserProfile
 
-
+## SAMPLE USER IDs:  U78644, U88542, U78644, U91979, U69670, U45178
 
 class CartSearchEngineUI(CartSearchEngine):
     def __init__(self):

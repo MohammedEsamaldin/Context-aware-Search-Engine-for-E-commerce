@@ -17,7 +17,7 @@ from src.services.embedding_service import EmbeddingService
 from src.services.openai_client import OpenAIClient
 from src.modules.preprocessor.preprocessor import QueryPreprocessor
 from src.modules.preprocessor.prompt_builder import PromptBuilder
-from src.modules.Dynamic_context_modelling.Session_Graph_Builder import ContextEmbedder
+from src.modules.Dynamic_context_modelling.session_graph_builder import ContextEmbedder
 from src.modules.Dynamic_context_modelling.fusion import VectorFuser
 
 from src.modules.retrieval.bm25_retriever import BM25CandidateRetriever
