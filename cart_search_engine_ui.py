@@ -27,6 +27,8 @@ class CartSearchEngineUI(CartSearchEngine):
                 query_input = gr.Textbox(label="Enter your Search Query")
                 search_btn = gr.Button("Search")
                 # output_box = gr.Textbox(label="Top 5 Results", lines=10, interactive=False)
+                ## refined query text
+                refined_query_display = gr.HTML(label="Refined Query")                
                 results_html = gr.HTML()
                 logout_btn = gr.Button("Logout", variant="stop")
 
@@ -71,6 +73,10 @@ class CartSearchEngineUI(CartSearchEngine):
 
                 # Run the search pipeline
                 results = app._run_ui_search(query)
+
+                ## Get refined query from query log
+                query_log = app._create_query_log(query)
+                refined_query = app._preprocess_query(query_log, app.current_user)
 
                 if not results:
                     return "<div style='color:gray;'>😕 No results found.</div>"
@@ -132,12 +138,12 @@ class CartSearchEngineUI(CartSearchEngine):
                     """
 
                 html += "</div>"
-                return html
+                return html, gr.update(visible=True, value=f"<div><strong>Refined Query:</strong> {refined_query}</div>")
 
             search_btn.click(
                 fn=handle_search,
                 inputs=[query_input, username_state],
-                outputs=results_html
+                outputs=[results_html, refined_query_display]
             )
 
             # Logout logic
