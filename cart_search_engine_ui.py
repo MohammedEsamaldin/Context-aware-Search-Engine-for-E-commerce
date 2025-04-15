@@ -114,7 +114,7 @@ class CartSearchEngineUI(CartSearchEngine):
                 <div style='display:flex; flex-direction:column; gap:12px; padding-top:10px; font-family:Arial,sans-serif;'>
                 """
 
-                for i, title in enumerate(results[:5], 1):
+                for i, title in enumerate(results[:self.search_K], 1):
                     highlighted_title = highlight_match(title, user_preferences)
                     html += f"""
                     <div style="

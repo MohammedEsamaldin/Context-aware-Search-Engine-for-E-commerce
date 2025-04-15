@@ -41,9 +41,9 @@ class CartSearchEngine:
         self.current_session = None
         self.search_components = None
         self.context_alpha = 0.65            
-        self.context_fusion_beta = 0.8      
+        self.context_fusion_beta = 0.65      
         self.search_K = 10                  
-        self.retrieval_fusion_beta = 0.5
+        self.retrieval_fusion_beta = 0.65
     
     def run(self):
         print("🛒 CART Search Engine")
