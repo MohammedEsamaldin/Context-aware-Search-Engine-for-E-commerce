@@ -22,8 +22,8 @@ class CartSearchEngineUI(CartSearchEngine):
                 user_input = gr.Textbox(label="Enter your User ID")
                 login_btn = gr.Button("Login")
                 login_msg = gr.Textbox(visible=False, interactive=False, label="")
-
             with search_section:
+                preferences_display = gr.HTML(label="Your Preferences")
                 query_input = gr.Textbox(label="Enter your Search Query")
                 search_btn = gr.Button("Search")
                 # output_box = gr.Textbox(label="Top 5 Results", lines=10, interactive=False)
@@ -33,15 +33,32 @@ class CartSearchEngineUI(CartSearchEngine):
             # Login logic
             def handle_login(user_id):
                 if not self.verify_user(user_id):
-                    return gr.update(visible=True), gr.update(visible=False), "❌ User not found", user_id
+                    return gr.update(visible=True), gr.update(visible=False), "❌ User not found", user_id, ""
+
                 self.create_session()
                 self._initialize_search_components()
-                return gr.update(visible=False), gr.update(visible=True), "", user_id
+                user_profile = UserProfile.get(user_id)
+                user_preferences = self.get_user_preferences(user_profile)
+
+                pref_html = """
+                <div style="font-family:Arial,sans-serif; font-size:14px; margin-bottom:10px;">
+                    <h4 style="color:#4B5563;">🧠 Your Preferences:</h4>
+                    <div><strong>Brands:</strong> {brands}</div>
+                    <div><strong>Colors:</strong> {colors}</div>
+                    <div><strong>Categories:</strong> {categories}</div>
+                </div>
+                """.format(
+                    brands=", ".join(user_preferences["favorite_brands"]),
+                    colors=", ".join(user_preferences["favorite_colors"]),
+                    categories=", ".join(user_preferences["favorite_categories"])
+                )
+
+                return gr.update(visible=False), gr.update(visible=True), "", user_id, pref_html
 
             login_btn.click(
                 fn=handle_login,
                 inputs=[user_input],
-                outputs=[login_section, search_section, login_msg, username_state]
+                outputs=[login_section, search_section, login_msg, username_state, preferences_display]
             )
 
             # Search logic
