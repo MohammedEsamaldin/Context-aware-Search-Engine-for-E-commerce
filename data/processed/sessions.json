@@ -1,0 +1,119 @@
+[
+  {
+    "sessionId": "session_20250407_user001_1",
+    "userId": "user001",
+    "startTime": "2025-04-07T09:30:00Z",
+    "endTime": "2025-04-07T10:15:00Z",
+    "queries": [
+      {
+        "queryId": "q1",
+        "text": "organic baby clothes",
+        "timestamp": "2025-04-07T09:30:00Z"
+      },
+      {
+        "queryId": "q2",
+        "text": "aden + anais swaddles",
+        "timestamp": "2025-04-07T09:42:00Z"
+      },
+      {
+        "queryId": "q3",
+        "text": "handmade nursery decor",
+        "timestamp": "2025-04-07T10:05:00Z"
+      }
+    ],
+    "transitions": [
+      {
+        "from": "q1",
+        "to": "q2",
+        "count": 1,
+        "timeDifference": 12,
+        "weight": 0.61
+      },
+      {
+        "from": "q2",
+        "to": "q3",
+        "count": 1,
+        "timeDifference": 23,
+        "weight": 0.42
+      }
+    ]
+  },
+  {
+    "sessionId": "session_20250407_user002_1",
+    "userId": "user002",
+    "startTime": "2025-04-07T14:00:00Z",
+    "endTime": "2025-04-07T14:45:00Z",
+    "queries": [
+      {
+        "queryId": "q1",
+        "text": "rv furniture covers",
+        "timestamp": "2025-04-07T14:00:00Z"
+      },
+      {
+        "queryId": "q2",
+        "text": "kastking fishing reels",
+        "timestamp": "2025-04-07T14:15:00Z"
+      },
+      {
+        "queryId": "q3",
+        "text": "waterproof couch protectors",
+        "timestamp": "2025-04-07T14:35:00Z"
+      }
+    ],
+    "transitions": [
+      {
+        "from": "q1",
+        "to": "q2",
+        "count": 1,
+        "timeDifference": 15,
+        "weight": 0.55
+      },
+      {
+        "from": "q2",
+        "to": "q3",
+        "count": 1,
+        "timeDifference": 20,
+        "weight": 0.45
+      }
+    ]
+  },
+  {
+    "sessionId": "session_20250407_user003_1",
+    "userId": "user003",
+    "startTime": "2025-04-07T16:20:00Z",
+    "endTime": "2025-04-07T17:00:00Z",
+    "queries": [
+      {
+        "queryId": "q1",
+        "text": "phone wood cases",
+        "timestamp": "2025-04-07T16:20:00Z"
+      },
+      {
+        "queryId": "q2",
+        "text": "polar seltzer cooler",
+        "timestamp": "2025-04-07T16:35:00Z"
+      },
+      {
+        "queryId": "q3",
+        "text": "diy wood desk plans",
+        "timestamp": "2025-04-07T16:50:00Z"
+      }
+    ],
+    "transitions": [
+      {
+        "from": "q1",
+        "to": "q2",
+        "count": 1,
+        "timeDifference": 15,
+        "weight": 0.55
+      },
+      {
+        "from": "q2",
+        "to": "q3",
+        "count": 1,
+        "timeDifference": 15,
+        "weight": 0.55
+      }
+    ]
+  }
+]

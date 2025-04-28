@@ -1,0 +1,57 @@
+[
+  {
+    "userId": "user001",
+    "name": "Alice Brown",
+    "email": "alice.brown@example.com",
+    "preferences": {
+      "favoriteBrands": [
+        "korange",
+        "shein",
+        "aden + anais"
+      ],
+      "interests": [
+        "home decor",
+        "handmade design",
+        "newborn care",
+        "infant fashion"
+      ]
+    },
+    "lastLogin": "2025-04-07T13:15:41.595299"
+  },
+  {
+    "userId": "user002",
+    "name": "Bob Smith",
+    "email": "bob.smith@example.com",
+    "preferences": {
+      "favoriteBrands": [
+        "v-timmix",
+        "nigo valve",
+        "kastking"
+      ],
+      "interests": [
+        "furniture protection",
+        "rv lifestyle",
+        "fishing"
+      ]
+    },
+    "lastLogin": "2025-04-07T13:15:41.595299"
+  },
+  {
+    "userId": "user003",
+    "name": "Charlie Johnson",
+    "email": "charlie.johnson@example.com",
+    "preferences": {
+      "favoriteBrands": [
+        "ushield",
+        "woodraphic",
+        "polar seltzer"
+      ],
+      "interests": [
+        "mobile accessories",
+        "woodworking",
+        "diy crafts"
+      ]
+    },
+    "lastLogin": "2025-04-07T13:15:41.595299"
+  }
+]
